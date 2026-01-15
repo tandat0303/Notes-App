@@ -8,7 +8,7 @@ export const getUserPreferences = query({
         .withIndex("by_user", (q) => q.eq('userId', args.userId)).first();
 
         return preferences || {
-            colorTheme: "slate",
+            colorTheme: "blue",
             fontTheme: "inter"
         }
     }
@@ -31,7 +31,7 @@ export const updateUserPreferences = mutation({
         } else {
             return await ctx.db.insert("userPreferences", {
                 userId,
-                colorTheme: args.colorTheme || "slate",
+                colorTheme: args.colorTheme || "blue",
                 fontTheme: args.fontTheme || "inter"
             })
         }

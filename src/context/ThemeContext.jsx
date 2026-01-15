@@ -18,7 +18,7 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
     const { user } = useUser;
     const [localTheme, setLocalTheme] = useState({
-        colorTheme: "slate",
+        colorTheme: "blue",
         fontTheme: "inter"
     });
 
