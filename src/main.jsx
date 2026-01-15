@@ -5,7 +5,7 @@ import App from './App.jsx'
 import { ClerkProvider } from '@clerk/clerk-react'
 import { ConvexProvider, ConvexReactClient } from 'convex/react'
 
-const convex = new ConvexReactClient(import.meta.env.VITE.CONVEX.URL)
+const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL)
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 
