@@ -33,7 +33,7 @@ export const getNotes = query({
     }
 })
 
-export const searchNote = query({
+export const searchNotes = query({
     args: {
         userId: v.string(),
         searchTerm: v.string(),
