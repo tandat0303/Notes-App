@@ -1,139 +1,181 @@
-import { useUser } from '@clerk/clerk-react';
-import { api } from '../../convex/_generated/api';
-import { useQuery } from 'convex/react';
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button } from './ui/button';
-import { Notebook, Plus, Search, Settings } from 'lucide-react';
-import { Input } from './ui/input';
-import NotesList from './NotesList';
-import NotePreview from './NotePreview';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
+import { useQuery } from "convex/react";
+import { Plus, Search, Settings, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import NotesList from "./NotesList";
+import NotePreview from "./NotePreview";
+import { api } from "../../convex/_generated/api";
+import { NotebookIcon } from "lucide-react";
 
 export default function NotesView() {
   const navigate = useNavigate();
   const { user } = useUser();
-
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedNoteId, setSelectedNoteId] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
-  
-  const notes = [];
-  // useQuery(
-  //         api.notes.getNotes, 
-  //         user ? { userId: user.id, isArchived: false} : "skip"
-  // );
 
-  const searchResults = useQuery(api.notes.searchNotes, user && searchTerm.trim()
-    ? {userId: user.id, searchTerm: searchTerm.trim()} : "skip");
+  const notes = useQuery(
+    api.notes.getNotes,
+    user ? { userId: user.id, isArchived: false } : "skip",
+  );
+
+  const searchResults = useQuery(
+    api.notes.searchNotes,
+    user && searchTerm.trim()
+      ? { userId: user.id, searchTerm: searchTerm.trim() }
+      : "skip",
+  );
 
   const displayNotes = searchTerm.trim() ? searchResults : notes;
-  const selectedNote = displayNotes?.find((note) => note._id === selectedNoteId);
+  const selectedNote = displayNotes?.find(
+    (note) => note._id === selectedNoteId,
+  );
 
   useEffect(() => {
-    if (displayNotes && displayNotes.length > 0 && !selectedNoteId && !isMobile){
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    // Auto-select first note if none selected and notes available
+    if (displayNotes?.length && !selectedNoteId && !isMobile) {
       setSelectedNoteId(displayNotes[0]._id);
     }
-  }, [displayNotes, selectedNoteId, isMobile])
+  }, [displayNotes, selectedNoteId, isMobile]);
 
-  const handleCreateNewNote = () => {
+  const handleCreateNew = () => {
     navigate("/new");
-  }
+  };
 
-  const handleSelectNote = (noteId) => {
+  const handleNoteSelect = (noteId) => {
     if (isMobile) {
       navigate(`/note/${noteId}`);
     } else {
       setSelectedNoteId(noteId);
     }
-  }
+  };
 
   const handleSearchFocus = () => {
     if (isMobile) {
       navigate("/search");
     }
-  }
-
-  if (!user) {
-    return <div>Please sign in...</div>;
-  }
-
-  if (notes === undefined) {
-    return <div>Loading notes...</div>;
-  }
+  };
 
   return (
-    <div className='flex h-screen bg-white'>
-      {/* Header */}
-      <div className='w-full md:w-80 flex flex-col border-r border-gray-200'>
-        <div className='p-4 border-b border-gray-200 bg-white'>
-          <div className='flex flex-col items-start justify-between mb-4'>
-            <h1 className='text-2xl font-bold mb-2 text-gray-900'>All Notes</h1>
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      {/* Notes List Panel */}
+      <div className="w-full md:w-80 flex flex-col border-r border-slate-200 bg-white/50 backdrop-blur-sm">
+        {/* Header */}
+        <div className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-lg">
+          <div className="flex flex-col items-start justify-between mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="size-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <NotebookIcon className="size-5 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                All Notes
+              </h1>
+            </div>
 
-            <div className='flex items-center justify-between gap-2 w-full'>
-              <Button 
-                size="sm" 
-                onClick={handleCreateNewNote}
-                className="bg-primary hover:bg-primary/75 gap-2">
-                  <Plus className='size-4' /> Create New Note
+            <div className="flex items-center justify-between gap-2 w-full">
+              <Button
+                size="sm"
+                onClick={handleCreateNew}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-lg"
+              >
+                <Plus className="size-4" />
+                New Note
               </Button>
-
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate("/settings")}
+                className="hover:bg-slate-100 rounded-lg"
               >
-                <Settings className='size-4' />
+                <Settings className="size-4 text-slate-600" />
               </Button>
             </div>
           </div>
 
           {/* Search */}
-          <div className='relative'>
-            <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-gray-400' />
-            <Input 
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200" />
+            <Input
               placeholder="Search by title, content, or tags..."
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={handleSearchFocus}
-              className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
+              className="pl-10 border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg transition-all duration-200 bg-white"
             />
           </div>
         </div>
 
         {/* Notes List */}
-        <div className='flex-1 overflow-y-auto bg-white'>
-          <NotesList 
-            notes={displayNotes || []} 
+        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white/50 to-slate-50/50">
+          <NotesList
+            notes={displayNotes || []}
             selectedNoteId={selectedNoteId}
-            onNoteSelect={handleSelectNote}
+            onNoteSelect={handleNoteSelect}
             loading={!displayNotes}
           />
         </div>
       </div>
 
-      {/* Note Preview */}
+      {/* Note Preview Panel - Desktop Only */}
       {!isMobile && (
-        <div className='flex-1 min-w-0 bg-white'>
+        <div className="flex-1 min-w-0 bg-white">
           {selectedNote ? (
-            <NotePreview 
-              note={selectedNote} 
-              onEdit={() => navigate(`/note/${selectedNote._id}`)} 
+            <NotePreview
+              note={selectedNote}
+              onEdit={() => navigate(`/note/${selectedNote._id}`)}
             />
-           ) : (
-            <div className='h-full flex items-center justify-center text-gray-500'>
-              {displayNotes?.length === 0 ? <div className='text-center'>
-                <Notebook className='size-12 mx-auto mb-4 text-gray-300' />
-                <p className='text-lg mb-2'>No notes available</p>
-                <p className='text-sm'>
-                  Create your first note to get started
-                </p>
-              </div> : <div className='text-center'>
-                <p>Select a note to view it here</p>
-                </div>}
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              {displayNotes?.length === 0 ? (
+                <div className="text-center animate-in fade-in duration-500">
+                  <div className="relative inline-block mb-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+                    <NotebookIcon className="relative w-16 h-16 mx-auto text-slate-300" />
+                  </div>
+                  <p className="text-xl font-semibold text-slate-700 mb-2">
+                    No notes yet
+                  </p>
+                  <p className="text-sm text-slate-500 max-w-xs mx-auto mb-6">
+                    Create your first note to get started on your journey
+                  </p>
+                  <Button
+                    onClick={handleCreateNew}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Sparkles className="size-4" />
+                    Create First Note
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center animate-in fade-in duration-500">
+                  <div className="size-16 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center">
+                    <NotebookIcon className="size-8 text-blue-600" />
+                  </div>
+                  <p className="text-lg font-medium text-slate-700">
+                    Select a note to view
+                  </p>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Choose from the list on the left
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
     </div>
-  )
+  );
 }

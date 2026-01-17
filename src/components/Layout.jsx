@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Sidebar from './Sidebar';
-import MobileBottomNav from './MobileBottomNav';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Sidebar from "./Sidebar";
+import MobileBottomNav from "./MobileBottomNav";
 
 export default function Layout({ children }) {
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -20,7 +20,7 @@ export default function Layout({ children }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey || e.metaKey) {
-        switch(e.key) {
+        switch (e.key) {
           case "1":
             e.preventDefault();
             navigate("/");
@@ -37,7 +37,7 @@ export default function Layout({ children }) {
             e.preventDefault();
             navigate("/settings");
             break;
-          case "n":
+          case "m":
             e.preventDefault();
             navigate("/new");
             break;
@@ -50,20 +50,18 @@ export default function Layout({ children }) {
   }, [navigate]);
 
   if (isMobile) {
-    return <div className='min-h-screen bg-gray-50'>
-      <main className='pb-16'>
-        {children}
-      </main>
-      <MobileBottomNav />
-    </div>
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <main className="pb-16">{children}</main>
+        <MobileBottomNav />
+      </div>
+    );
   }
-  
+
   return (
-    <div className='flex min-h-screen bg-gray-50'>
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
-      <main className='flex-1 min-w-0'>
-        {children}
-      </main>
+      <main className="flex-1 min-w-0">{children}</main>
     </div>
-  )
+  );
 }

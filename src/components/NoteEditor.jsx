@@ -1,18 +1,26 @@
-import { useUser } from '@clerk/clerk-react';
-import { api } from '../../convex/_generated/api';
-import { useMutation, useQuery } from 'convex/react';
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { toast } from 'sonner';
-import { Button } from './ui/button';
-import { Archive, ArrowLeft, Trash2 } from 'lucide-react';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { TipTapEditor } from './TipTapEditor';
+import { useUser } from "@clerk/clerk-react";
+import { api } from "../../convex/_generated/api";
+import { useMutation, useQuery } from "convex/react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
+import { Button } from "./ui/button";
+import { Archive, ArrowLeft, Trash2, Save, Sparkles } from "lucide-react";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import TipTapEditor from "./TipTapEditor";
 
 export default function NoteEditor() {
-  
   const { noteId } = useParams();
   const navigate = useNavigate();
   const { user } = useUser();
@@ -25,10 +33,10 @@ export default function NoteEditor() {
 
   const isNewNote = !noteId;
 
-  const note = 
-    useQuery(api.notes.getNotes, user && noteId ? 
-      { userId: user.id } : "skip"
-    );
+  const note = useQuery(
+    api.notes.getNotes,
+    user && noteId ? { userId: user.id } : "skip",
+  );
 
   const createNote = useMutation(api.notes.createNote);
   const updateNote = useMutation(api.notes.updateNote);
@@ -49,19 +57,20 @@ export default function NoteEditor() {
     const handleBeforeUnload = (e) => {
       if (isModified) {
         e.preventDefault();
-        e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+        e.returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
       }
     };
-    
+
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [isModified])
-  
-  const handleSave = useCallback(() => {
+  }, [isModified]);
+
+  const handleSave = useCallback(
     async (silent = false) => {
       if (!user || !title.trim()) {
         if (!title.trim()) {
-          toast.error("Please enter a title for your note")
+          toast.error("Please enter a title for your note");
         }
 
         return;
@@ -70,15 +79,16 @@ export default function NoteEditor() {
       setIsSaving(true);
 
       try {
-        const tagsArray = tags.split(",")
-                            .map((tag) => tag.trim())
-                            .filter((tag) => tag.length > 0);
-      
+        const tagArray = tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag.length > 0);
+
         if (isNewNote) {
           await createNote({
             title: title.trim(),
             content: content.trim(),
-            tags: tagsArray,
+            tags: tagArray,
             userId: user.id,
           });
         } else {
@@ -86,7 +96,7 @@ export default function NoteEditor() {
             id: noteId,
             title: title.trim(),
             content: content.trim(),
-            tags: tagsArray
+            tags: tagArray,
           });
         }
 
@@ -97,15 +107,28 @@ export default function NoteEditor() {
           navigate("/");
         }
       } catch (error) {
-        console.error("Failed to save note: ", error);
+        console.error("Failed to save note:", error);
         toast.error("Failed to save note");
       } finally {
         setIsSaving(false);
       }
-    }
-  }, [content, createNote, isNewNote, navigate, noteId, tags, title, updateNote, user]);
+    },
+    [
+      content,
+      createNote,
+      isNewNote,
+      navigate,
+      noteId,
+      tags,
+      title,
+      updateNote,
+      user,
+    ],
+  );
 
-  {/* Auto save */}
+  {
+    /* Auto save */
+  }
   useEffect(() => {
     if (isModified && !isNewNote && title.trim()) {
       const saveTimer = setTimeout(async () => {
@@ -114,20 +137,23 @@ export default function NoteEditor() {
 
       return () => clearTimeout(saveTimer);
     }
-  }, [title, content, tags, isModified, isNewNote, handleSave])
+  }, [title, content, tags, isModified, isNewNote, handleSave]);
 
   const handleCancel = useCallback(() => {
     if (isModified) {
-      if (confirm("You have unsaved changes. Are you sure you want to leave?"))
-      {
-        navigate("/")
-      } else {
-        navigate("/new");
+      if (
+        confirm("You have unsaved changes. Are you sure you want to leave?")
+      ) {
+        navigate("/");
       }
+    } else {
+      navigate("/");
     }
   }, [isModified, navigate]);
 
-  {/* Keyboard shortcuts */}
+  {
+    /* Keyboard shortcuts */
+  }
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey || e.metaKey) {
@@ -163,64 +189,69 @@ export default function NoteEditor() {
       console.error("Failed to delete note: ", error);
       toast.error("Failed to delete note");
     }
-  }
+  };
 
   const handleArchive = async () => {
-    if(!currentNote) return;
+    if (!currentNote) return;
 
     try {
       await toggleArchive({ id: noteId });
-      toast.success(currentNote.isArchived ? "Note unarchived" : "Note archived");
+      toast.success(
+        currentNote.isArchived ? "Note unarchived" : "Note archived",
+      );
       navigate("/");
     } catch (error) {
       console.error("Failed to archive note", error);
       toast.error("Failed to archive note");
     }
-  }
+  };
 
   const handleTitleChange = (value) => {
     setTitle(value);
     setIsModified(true);
-  }
+  };
 
   const handleContentChange = (value) => {
     setContent(value);
     setIsModified(true);
-  }
+  };
 
   const handleTagsChange = (value) => {
     setTags(value);
     setIsModified(true);
-  }
+  };
 
-  return (    
-    <div className='h-screen flex flex-col bg-white'>
+  return (
+    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50">
       {/* Mobile Header */}
-      <div className='md:hidden p-4 border-b border-gray-200 bg-white'>
-        <div className='flex items-center justify-between'>
+      <div className="md:hidden p-4 border-b border-slate-200 bg-white/80 backdrop-blur-lg shadow-sm">
+        <div className="flex items-center justify-between">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleCancel}
-            className="gap-2 text-gray-700"
+            className="gap-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100"
           >
-            <ArrowLeft className='size-4' />Go back
+            <ArrowLeft className="size-4" />
+            Go back
           </Button>
 
-          <div className='flex items-center gap-2'>
-            <Button onClick={() => handleSave()} 
-                    disabled={isSaving || !title.trim()} 
-                    size="sm"
-                    className="bg-primary hover:bg-primary/75"
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => handleSave()}
+              disabled={isSaving || !title.trim()}
+              size="sm"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
             >
-              {isSaving ? "Saving" : "Save"}
+              <Save className="size-4" />
+              {isSaving ? "Saving..." : "Save"}
             </Button>
 
             <Button
               variant="outline"
               onClick={handleCancel}
               size="sm"
-              className="border-gray-300 text-gray-700"
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
             >
               Cancel
             </Button>
@@ -229,69 +260,85 @@ export default function NoteEditor() {
       </div>
 
       {/* Desktop Header */}
-      <div className='hidden md:block p-6 border-b border-gray-200 bg-white'>
-        <div className='flex flex-wrap gap-2 items-center justify-between'>
-          <div className='flex flex-wrap items-center gap-4'>
+      <div className="hidden md:block p-6 border-b border-slate-200 bg-white/80 backdrop-blur-lg shadow-sm">
+        <div className="flex flex-wrap gap-2 items-center justify-between">
+          <div className="flex flex-wrap items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleCancel}
-              className="gap-2 text-gray-700"
+              className="gap-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
             >
-              <ArrowLeft className='size-4' />
+              <ArrowLeft className="size-4" />
             </Button>
 
-            <div className='text-2xl font-semibold text-gray-900'>
-              {isNewNote 
-                ? "Create New Note" 
-                : `${currentNote?.title || "Edit Note"}`}
-              {isModified && "· Modified"}
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                {isNewNote
+                  ? "Create New Note"
+                  : `${currentNote?.title || "Edit Note"}`}
+              </h1>
+              {isModified && (
+                <span className="flex items-center gap-1.5 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                  <Sparkles className="size-3" />
+                  Unsaved changes
+                </span>
+              )}
             </div>
           </div>
 
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             {!isNewNote && (
               <>
                 <Button
                   variant="outline"
                   onClick={handleArchive}
                   size="sm"
-                  className="gap-2 border-gray-300 text-gray-700"
+                  className="gap-2 border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg transition-all duration-200"
                 >
-                  <Archive className='size-4' />
-                  {currentNote?.isArchived ? "Unarchived" : "Archive"}
+                  <Archive className="size-4" />
+                  {currentNote?.isArchived ? "Unarchive" : "Archive"}
                 </Button>
 
                 <Dialog>
                   <DialogTrigger asChild>
-                    <Button 
+                    <Button
                       variant="outline"
                       size="sm"
-                      className="gap-2 border-red-300 text-red-600 hover:bg-red-50">
-                        <Trash2 className='size-4' /> Delete Note
+                      className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition-all duration-200"
+                    >
+                      <Trash2 className="size-4" /> Delete
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Delete Note</DialogTitle>
-                      
-                      <DialogDescription>
-                        This is a permanent action. Are you sure you want to continue?
-                      </DialogDescription>
-                      
-                      <DialogFooter>
-                        <DialogClose className="text-sm mr-4">Cancel</DialogClose>
+                      <DialogTitle className="text-xl font-bold text-slate-900">
+                        Delete Note
+                      </DialogTitle>
 
-                        <Button
-                          variant="destructive"
-                          onClick={handleDelete}
-                          size="sm"
-                          className="gap-2"
-                        >
-                          <Trash2 className='size-4' />Delete Note
-                        </Button>
-                      </DialogFooter>
+                      <DialogDescription className="text-slate-600 pt-2">
+                        This action cannot be undone. This will permanently
+                        delete your note.
+                      </DialogDescription>
                     </DialogHeader>
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                      <DialogClose asChild>
+                        <Button variant="outline" className="border-slate-300">
+                          Cancel
+                        </Button>
+                      </DialogClose>
+
+                      <Button
+                        variant="destructive"
+                        onClick={handleDelete}
+                        size="sm"
+                        className="gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700"
+                      >
+                        <Trash2 className="size-4" />
+                        Delete Note
+                      </Button>
+                    </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </>
@@ -301,7 +348,7 @@ export default function NoteEditor() {
               variant="outline"
               onClick={handleCancel}
               size="sm"
-              className="gap-2 border-gray-300 text-gray-700"
+              className="gap-2 border-slate-300 text-slate-700 hover:bg-slate-100 rounded-lg"
             >
               Cancel
             </Button>
@@ -310,8 +357,9 @@ export default function NoteEditor() {
               onClick={() => handleSave()}
               disabled={isSaving || !title.trim()}
               size="sm"
-              className="gap-2 bg-primary hover:bg-primary/75"
+              className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
             >
+              <Save className="size-4" />
               {isSaving ? "Saving..." : "Save"}
             </Button>
           </div>
@@ -319,44 +367,51 @@ export default function NoteEditor() {
       </div>
 
       {/* Form */}
-      <div className='flex-1 overflow-y-auto'>
-        <div className='max-w-4xl mx-auto p-6 space-y-6'>
-          <div className='space-y-2'>
-            <Input 
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto p-6 space-y-6">
+          <div className="space-y-2">
+            <Input
               value={title}
               onChange={(e) => handleTitleChange(e.target.value)}
               placeholder="Enter note title..."
-              className="!text-2xl font-semibold border-0 px-4 py-6 shadow-none focus:outline-none !focus:ring-0 !focus:border-0 placeholder:text-gray-400" autoFocus
+              className="!text-3xl font-bold border-0 px-4 py-6 shadow-none focus:outline-none !focus:ring-0 !focus:border-0 placeholder:text-slate-400 bg-transparent"
+              autoFocus
             />
           </div>
 
           {/* Tags */}
-          <div className='space-y-2'>
-            <Label 
+          <div className="space-y-2">
+            <Label
               htmlFor="tags"
-              className="text-sm font-medium text-gray-700">
-                Tags
+              className="text-sm font-semibold text-slate-700 flex items-center gap-2"
+            >
+              <span className="w-1 h-4 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></span>
+              Tags
             </Label>
             <Input
               id="tags"
               value={tags}
               onChange={(e) => handleTagsChange(e.target.value)}
               placeholder="Enter tags separated by commas (e.g React, Javascript, Note...)"
-              className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg transition-all duration-200"
             />
-            <p className='text-xs text-gray-500'>
-              Use commas to separate mutiple tags
+            <p className="text-xs text-slate-500 flex items-center gap-1">
+              <span className="size-1 bg-slate-400 rounded-full"></span>
+              Use commas to separate multiple tags
             </p>
           </div>
 
           {/* Content */}
-          <div className='space-y-2'>
-            <Label className="text-sm font-medium text-gray-700">Content</Label>
-            <div className='border border-gray-300 rounded-lg overflow-hidden min-h-96'>
-              <TipTapEditor  
-                ref={editorRef} 
-                content={content} 
-                onChange={handleContentChange} 
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+              <span className="w-1 h-4 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></span>
+              Content
+            </Label>
+            <div className="border border-slate-300 rounded-xl overflow-hidden min-h-96 shadow-sm hover:shadow-md transition-shadow duration-300 bg-white">
+              <TipTapEditor
+                ref={editorRef}
+                content={content}
+                onChange={handleContentChange}
                 placeholder="Start writing your note..."
               />
             </div>
@@ -364,5 +419,5 @@ export default function NoteEditor() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -97,8 +97,9 @@
 }
 
 .font-mono {
-  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
-    "Courier New", monospace;
+  font-family:
+    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New",
+    monospace;
 }
 
 /* Color Theme Classes */
@@ -270,7 +271,7 @@ body {
   color: #111827;
   border-left-width: 0.25rem;
   border-left-color: #e5e7eb;
-  quotes: "\201C""\201D""\2018""\2019";
+  quotes: "\201C" "\201D" "\2018" "\2019";
   margin-top: 1.6em;
   margin-bottom: 1.6em;
   padding-left: 1em;
@@ -334,8 +335,9 @@ body {
   background-color: #f3f4f6;
   border-radius: 0.25rem;
   padding: 0.125rem 0.25rem;
-  font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
-    "Courier New", monospace;
+  font-family:
+    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New",
+    monospace;
   font-size: 0.875em;
 }
 
