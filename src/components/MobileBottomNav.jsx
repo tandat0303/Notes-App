@@ -26,12 +26,12 @@ export default function MobileBottomNav() {
       icon: Archive,
       path: "/archived",
     },
-    {
-      key: "tags",
-      label: "Tags",
-      icon: Tags,
-      path: "/tags",
-    },
+    // {
+    //   key: "tags",
+    //   label: "Tags",
+    //   icon: Tags,
+    //   path: "/tags",
+    // },
     {
       key: "settings",
       label: "Settings",
@@ -48,7 +48,7 @@ export default function MobileBottomNav() {
   
   return (
     <div className='fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-200 shadow-2xl'>
-      <div className='grid grid-cols-5 gap-1 p-2'>
+      <div className='grid grid-cols-4 gap-1 p-2'>
         {navItems.map((item) => (
           <Button 
             key={item.key} 

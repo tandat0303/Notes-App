@@ -19,6 +19,7 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import TipTapEditor from "./TipTapEditor";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 export default function NoteEditor() {
   const { noteId } = useParams();
@@ -260,6 +261,7 @@ export default function NoteEditor() {
             >
               Cancel
             </Button>
+
           </div>
         </div>
       </div>
