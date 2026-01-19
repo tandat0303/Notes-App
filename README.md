@@ -35,7 +35,7 @@ npm convex deploy
 
 * Website: https://truongtandat.vercel.app/
 * Github: [@tandat0303](https://github.com/tandat0303)
-* LinkedIn: [@Tan Dat Truong](https://linkedin.com/in/Tan Dat Truong)
+* LinkedIn: [@Tan Dat Truong](https://www.linkedin.com/in/tan-dat-truong-71a760364/)
 
 ## Show your support
 
