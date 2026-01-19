@@ -1,16 +1,50 @@
-# React + Vite
+<h1 align="center">Welcome to Notes App 👋</h1>
+<p>
+  <a href="https://mit-license.org/" target="_blank">
+    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" />
+  </a>
+</p>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Capture your thoughts, organize your ideas, and boost your productivity with my beautiful and intuitive note-taking app.
 
-Currently, two official plugins are available:
+### ✨ [Demo](https://notes-app-sgu-std.vercel.app/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Install
 
-## React Compiler
+# Install packages
+```sh
+npm install
+```
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+## Usage
 
-## Expanding the ESLint configuration
+# Development mode
+```sh
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Convex Database
+```sh
+npm convex dev
+npm convex deploy
+```
+
+## Author
+
+👤 **Truong Tan Dat**
+
+* Website: https://truongtandat.vercel.app/
+* Github: [@tandat0303](https://github.com/tandat0303)
+* LinkedIn: [@Tan Dat Truong](https://linkedin.com/in/Tan Dat Truong)
+
+## Show your support
+
+Give a ⭐️ if this project helped you!
+
+## 📝 License
+
+Copyright © 2026 [Truong Tan Dat](https://github.com/tandat0303).<br />
+This project is [MIT](https://mit-license.org/) licensed.
+
+***
+_This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
