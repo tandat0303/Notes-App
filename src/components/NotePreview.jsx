@@ -64,36 +64,43 @@ export default function NotePreview({ note, onEdit }) {
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-white to-slate-50">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-4 wrap-break-words leading-tight">
+            <h1 className="text-2xl font-bold text-slate-900 mb-4 wrap-break-words leading-tight">
               {note.title || "Untitled"}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 mb-4">
+            <div className="flex flex-wrap items-center gap-6 text-sm text-slate-500 mb-4">
               <div className="flex items-center gap-2">
-                <span className="font-medium">Tags</span>
+                <span className="font-semibold text-slate-700">Tags</span>
                 {note.tags?.length > 0 ? (
-                  <div className="flex gap-1 flex-wrap">
+                  <div className="flex gap-1.5 flex-wrap">
                     {note.tags.map((tag, index) => (
                       <Badge
                         key={index}
-                        variant="secondary"
-                        className="text-xs px-2 py-1 bg-primary/25 text-primary hover:bg-primary/50"
+                        className="text-xs px-2.5 py-0.5 font-medium rounded-full transition-all duration-200"
+                        style={{
+                          background: "var(--gradient-primary)",
+                          color: "white",
+                        }}
                       >
                         {tag}
                       </Badge>
                     ))}
                   </div>
                 ) : (
-                  <span>None</span>
+                  <span className="text-slate-400">None</span>
                 )}
               </div>
 
               <div className="flex items-center gap-2 text-xs">
-                <span className="font-medium text-gray-900">Last edited:</span>
-                <span>{formatDate(note.updatedAt)}</span>
+                <span className="font-semibold text-slate-700">
+                  Last edited:
+                </span>
+                <span className="text-slate-500">
+                  {formatDate(note.updatedAt)}
+                </span>
               </div>
             </div>
           </div>
@@ -103,18 +110,23 @@ export default function NotePreview({ note, onEdit }) {
               variant="outline"
               size="sm"
               onClick={onEdit}
-              className="gap-2 border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
+              className="gap-2 border-slate-300 text-slate-700 text-sm hover:bg-slate-50 rounded-lg transition-all duration-200"
+              style={{
+                "--tw-ring-color": "var(--color-primary-200)",
+              }}
             >
               <Pencil className="size-4" />
+              Edit
             </Button>
 
             <Button
               variant="outline"
               size="sm"
               onClick={handleShare}
-              className="gap-2 border-gray-300 text-gray-700 text-sm hover:bg-gray-50"
+              className="gap-2 border-slate-300 text-slate-700 text-sm hover:bg-slate-50 rounded-lg transition-all duration-200"
             >
               <Share className="size-4" />
+              Share
             </Button>
 
             <DropdownMenu>
@@ -122,44 +134,59 @@ export default function NotePreview({ note, onEdit }) {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg"
                 >
                   <MoreVertical className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleArchive} className="mb-1">
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={handleArchive}
+                  className="cursor-pointer mb-1 focus:bg-slate-100"
+                >
                   <Archive className="size-4 mr-2" />
                   {note.isArchived ? "Unarchive" : "Archive"} Note
                 </DropdownMenuItem>
 
                 <Dialog>
                   <DialogTrigger asChild className="w-full">
-                    <Button variant="destructive">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
                       <Trash2 className="size-4 mr-2" />
                       Delete Note
                     </Button>
                   </DialogTrigger>
 
-                  <DialogContent>
+                  <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Delete Note</DialogTitle>
-                      <DialogDescription>
-                        Deleting a note is a permanent action. Proceed with
-                        caution.
+                      <DialogTitle className="text-xl font-bold text-slate-900">
+                        Delete Note
+                      </DialogTitle>
+                      <DialogDescription className="text-slate-600 pt-2">
+                        This action cannot be undone. This will permanently
+                        delete your note.
                       </DialogDescription>
-
-                      <DialogFooter>
-                        <DialogClose className="text-sm mr-4">
-                          Cancel
-                        </DialogClose>
-
-                        <Button onClick={handleDelete} variant="destructive">
-                          Delete Note
-                        </Button>
-                      </DialogFooter>
                     </DialogHeader>
+
+                    <DialogFooter className="gap-2 sm:gap-0">
+                      <DialogClose asChild>
+                        <Button variant="outline" className="border-slate-300">
+                          Cancel
+                        </Button>
+                      </DialogClose>
+
+                      <Button
+                        onClick={handleDelete}
+                        variant="destructive"
+                        className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700"
+                      >
+                        <Trash2 className="size-4 mr-2" />
+                        Delete Note
+                      </Button>
+                    </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </DropdownMenuContent>
@@ -169,11 +196,13 @@ export default function NotePreview({ note, onEdit }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white to-slate-50/30">
         <div
-          className="p-6 prose prose-gray max-w-none leading-relaxed"
+          className="p-6 prose prose-slate max-w-none leading-relaxed"
           dangerouslySetInnerHTML={{
-            __html: note.content || '<p class="text-gray-500">No Content</p>',
+            __html:
+              note.content ||
+              '<p class="text-slate-400 italic">No content available</p>',
           }}
         />
       </div>

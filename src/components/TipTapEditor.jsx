@@ -130,33 +130,50 @@ const TipTapEditor = forwardRef(({ content, onChange, placeholder }, ref) => {
     setIsDialogOpen(false);
   };
 
-  const ToolbarButton = ({ onClick, isActive, children, title, disabled }) => (
-    <Button
-      variant={isActive ? "default" : "ghost"}
-      size="sm"
-      onClick={(e) => {
-        e.preventDefault();
-        onClick();
-      }}
-      title={title}
-      type="button"
-      disabled={disabled}
-      className={`
+  const ToolbarButton = ({ onClick, isActive, children, title, disabled }) => {
+    const buttonStyle = isActive
+      ? {
+          background: "var(--gradient-primary)",
+          color: "white",
+          boxShadow: "0 4px 6px -1px var(--shadow-primary-light)",
+        }
+      : {};
+
+    return (
+      <Button
+        variant={isActive ? "default" : "ghost"}
+        size="sm"
+        onClick={(e) => {
+          e.preventDefault();
+          onClick();
+        }}
+        title={title}
+        type="button"
+        disabled={disabled}
+        className={`
               size-9 p-0 rounded-lg transition-all duration-200 relative
-              ${
-                isActive
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md hover:from-blue-700 hover:to-indigo-700"
-                  : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"
-              }
+              ${isActive ? "" : "hover:bg-slate-100 text-slate-600 hover:text-slate-900"}
               ${disabled ? "opacity-40 cursor-not-allowed" : ""}
             `}
-    >
-      {children}
-      {isActive && (
-        <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-white rounded-full"></span>
-      )}
-    </Button>
-  );
+        style={buttonStyle}
+        onMouseEnter={(e) => {
+          if (isActive && !disabled) {
+            e.currentTarget.style.background = "var(--gradient-primary-hover)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (isActive && !disabled) {
+            e.currentTarget.style.background = "var(--gradient-primary)";
+          }
+        }}
+      >
+        {children}
+        {isActive && (
+          <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-white rounded-full"></span>
+        )}
+      </Button>
+    );
+  };
 
   return (
     <div className="w-full">
@@ -293,7 +310,16 @@ const TipTapEditor = forwardRef(({ content, onChange, placeholder }, ref) => {
                     addLink();
                   }
                 }}
-                className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+                className="border-slate-300 rounded-lg"
+                style={{
+                  "--tw-ring-color": "var(--color-primary-200)",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-primary)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "";
+                }}
                 autoFocus
               />
 
@@ -307,7 +333,18 @@ const TipTapEditor = forwardRef(({ content, onChange, placeholder }, ref) => {
                 </Button>
                 <Button
                   onClick={addLink}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                  className="text-white"
+                  style={{
+                    background: "var(--gradient-primary)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background =
+                      "var(--gradient-primary-hover)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background =
+                      "var(--gradient-primary)";
+                  }}
                 >
                   Add Link
                 </Button>
@@ -350,8 +387,19 @@ const TipTapEditor = forwardRef(({ content, onChange, placeholder }, ref) => {
             {(editor.isActive("bold") ||
               editor.isActive("italic") ||
               editor.isActive("underline")) && (
-              <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                <span className="size-1.5 bg-blue-600 rounded-full animate-pulse"></span>
+              <span
+                className="flex items-center gap-1 px-2 py-0.5 rounded-full"
+                style={{
+                  color: "var(--color-primary)",
+                  backgroundColor: "var(--color-primary-50)",
+                }}
+              >
+                <span
+                  className="size-1.5 rounded-full animate-pulse"
+                  style={{
+                    backgroundColor: "var(--color-primary)",
+                  }}
+                ></span>
                 Active: {editor.isActive("bold") && "Bold "}
                 {editor.isActive("italic") && "Italic "}
                 {editor.isActive("underline") && "Underline"}

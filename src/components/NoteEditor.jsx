@@ -72,7 +72,6 @@ export default function NoteEditor() {
         if (!title.trim()) {
           toast.error("Please enter a title for your note");
         }
-
         return;
       }
 
@@ -126,15 +125,11 @@ export default function NoteEditor() {
     ],
   );
 
-  {
-    /* Auto save */
-  }
   useEffect(() => {
     if (isModified && !isNewNote && title.trim()) {
       const saveTimer = setTimeout(async () => {
         handleSave(true);
       }, 2000);
-
       return () => clearTimeout(saveTimer);
     }
   }, [title, content, tags, isModified, isNewNote, handleSave]);
@@ -151,9 +146,6 @@ export default function NoteEditor() {
     }
   }, [isModified, navigate]);
 
-  {
-    /* Keyboard shortcuts */
-  }
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey || e.metaKey) {
@@ -241,7 +233,20 @@ export default function NoteEditor() {
               onClick={() => handleSave()}
               disabled={isSaving || !title.trim()}
               size="sm"
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              className="text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              style={{
+                background: "var(--gradient-primary)",
+                opacity: isSaving || !title.trim() ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!isSaving && title.trim()) {
+                  e.currentTarget.style.background =
+                    "var(--gradient-primary-hover)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "var(--gradient-primary)";
+              }}
             >
               <Save className="size-4" />
               {isSaving ? "Saving..." : "Save"}
@@ -279,7 +284,14 @@ export default function NoteEditor() {
                   : `${currentNote?.title || "Edit Note"}`}
               </h1>
               {isModified && (
-                <span className="flex items-center gap-1.5 text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                <span
+                  className="flex items-center gap-1.5 text-sm px-3 py-1 rounded-full border"
+                  style={{
+                    color: "#f59e0b",
+                    backgroundColor: "#fef3c7",
+                    borderColor: "#fde68a",
+                  }}
+                >
                   <Sparkles className="size-3" />
                   Unsaved changes
                 </span>
@@ -315,7 +327,6 @@ export default function NoteEditor() {
                       <DialogTitle className="text-xl font-bold text-slate-900">
                         Delete Note
                       </DialogTitle>
-
                       <DialogDescription className="text-slate-600 pt-2">
                         This action cannot be undone. This will permanently
                         delete your note.
@@ -357,7 +368,21 @@ export default function NoteEditor() {
               onClick={() => handleSave()}
               disabled={isSaving || !title.trim()}
               size="sm"
-              className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+              className="gap-2 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg"
+              style={{
+                background: "var(--gradient-primary)",
+                opacity: isSaving || !title.trim() ? 0.5 : 1,
+                cursor: isSaving || !title.trim() ? "not-allowed" : "pointer",
+              }}
+              onMouseEnter={(e) => {
+                if (!isSaving && title.trim()) {
+                  e.currentTarget.style.background =
+                    "var(--gradient-primary-hover)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "var(--gradient-primary)";
+              }}
             >
               <Save className="size-4" />
               {isSaving ? "Saving..." : "Save"}
@@ -385,7 +410,12 @@ export default function NoteEditor() {
               htmlFor="tags"
               className="text-sm font-semibold text-slate-700 flex items-center gap-2"
             >
-              <span className="w-1 h-4 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></span>
+              <span
+                className="w-1 h-4 rounded-full"
+                style={{
+                  background: "var(--gradient-primary)",
+                }}
+              ></span>
               Tags
             </Label>
             <Input
@@ -393,7 +423,16 @@ export default function NoteEditor() {
               value={tags}
               onChange={(e) => handleTagsChange(e.target.value)}
               placeholder="Enter tags separated by commas (e.g React, Javascript, Note...)"
-              className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg transition-all duration-200"
+              className="border-slate-300 rounded-lg transition-all duration-200"
+              style={{
+                "--tw-ring-color": "var(--color-primary-200)",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-primary)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "";
+              }}
             />
             <p className="text-xs text-slate-500 flex items-center gap-1">
               <span className="size-1 bg-slate-400 rounded-full"></span>
@@ -404,7 +443,12 @@ export default function NoteEditor() {
           {/* Content */}
           <div className="space-y-2">
             <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              <span className="w-1 h-4 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full"></span>
+              <span
+                className="w-1 h-4 rounded-full"
+                style={{
+                  background: "var(--gradient-primary)",
+                }}
+              ></span>
               Content
             </Label>
             <div className="border border-slate-300 rounded-xl overflow-hidden min-h-96 shadow-sm hover:shadow-md transition-shadow duration-300 bg-white">

@@ -20,7 +20,9 @@ export default function TagsView() {
 
   const notes = useQuery(
     api.notes.getNotes,
-    user && tag ? { userId: user.id, isArchived: false, tagFilter: tag } : "skip"
+    user && tag
+      ? { userId: user.id, isArchived: false, tagFilter: tag }
+      : "skip",
   );
 
   const filteredNotes = notes?.filter((note) => {
@@ -32,7 +34,9 @@ export default function TagsView() {
     );
   });
 
-  const selectedNote = filteredNotes?.find((note) => note._id === selectedNoteId);
+  const selectedNote = filteredNotes?.find(
+    (note) => note._id === selectedNoteId,
+  );
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -61,32 +65,71 @@ export default function TagsView() {
         <div className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-lg">
           <div className="flex items-center gap-3 mb-4">
             {isMobile && (
-              <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="hover:bg-slate-100">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="hover:bg-slate-100"
+              >
                 <ArrowLeft className="size-4" />
               </Button>
             )}
-            <div className="size-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+            <div
+              className="size-10 rounded-xl flex items-center justify-center shadow-lg"
+              style={{
+                background: "var(--gradient-primary)",
+                boxShadow: "0 10px 25px -5px var(--shadow-primary)",
+              }}
+            >
               <Tag className="size-5 text-white" />
             </div>
             <h1 className="text-xl font-bold text-slate-900 line-clamp-1">
-              Tag: <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200">{tag}</Badge>
+              Tag:{" "}
+              <Badge
+                className="text-white"
+                style={{
+                  background: "var(--gradient-primary)",
+                }}
+              >
+                {tag}
+              </Badge>
             </h1>
           </div>
 
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200" />
+            <Search 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200" 
+              style={{
+                color: document.querySelector(":focus-within")
+                  ? "var(--color-primary)"
+                  : "",
+              }}
+            />
             <Input
               placeholder={`Search in ${tag}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg"
+              className="pl-10 border-slate-300 rounded-lg"
+              style={{
+                "--tw-ring-color": "var(--color-primary-200)",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-primary)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "";
+              }}
             />
           </div>
 
           {filteredNotes && (
             <p className="text-sm text-slate-600 mt-2 flex items-center gap-1.5">
-              <span className="size-1.5 bg-blue-600 rounded-full"></span>
-              {filteredNotes.length} {filteredNotes.length === 1 ? "note" : "notes"}
+              <span
+                className="size-1.5 rounded-full"
+                style={{ backgroundColor: "var(--color-primary)" }}
+              ></span>
+              {filteredNotes.length}{" "}
+              {filteredNotes.length === 1 ? "note" : "notes"}
             </p>
           )}
         </div>
@@ -113,11 +156,21 @@ export default function TagsView() {
               {filteredNotes?.length === 0 ? (
                 <div className="text-center animate-in fade-in duration-500">
                   <div className="relative inline-block mb-6">
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+                    <div
+                      className="absolute inset-0 rounded-full blur-xl opacity-30 animate-pulse"
+                      style={{
+                        background:
+                          "linear-gradient(to right, #9333ea, #ec4899)",
+                      }}
+                    ></div>
                     <Tag className="relative size-16 text-slate-300" />
                   </div>
-                  <p className="text-xl font-semibold text-slate-700 mb-2">No notes with "{tag}"</p>
-                  <p className="text-sm text-slate-500">Create a note with this tag to see it here</p>
+                  <p className="text-xl font-semibold text-slate-700 mb-2">
+                    No notes with "{tag}"
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    Create a note with this tag to see it here
+                  </p>
                 </div>
               ) : (
                 <div className="text-center">

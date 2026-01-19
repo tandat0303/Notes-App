@@ -28,7 +28,6 @@ export default function Sidebar() {
 
   const isActive = (path) => {
     if (path === "/") return location.pathname === "/";
-
     return location.pathname.startsWith(path);
   };
 
@@ -37,10 +36,22 @@ export default function Sidebar() {
       {/* Header */}
       <div className="p-6 border-b border-slate-700/50">
         <div className="flex items-center gap-3">
-          <div className="size-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 transition-transform hover:scale-105">
+          <div
+            className="size-10 rounded-xl flex items-center justify-center shadow-lg transition-transform hover:scale-105"
+            style={{
+              background: "var(--gradient-primary)",
+              boxShadow: "0 10px 25px -5px var(--shadow-primary)",
+            }}
+          >
             <NotebookIcon className="size-6 text-white" />
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+          <span
+            className="text-xl font-bold bg-clip-text text-transparent"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, var(--color-primary-light), var(--color-primary))",
+            }}
+          >
             Notes.io
           </span>
         </div>
@@ -54,16 +65,22 @@ export default function Sidebar() {
             className={cn(
               "w-full justify-start gap-3 h-11 rounded-lg transition-all duration-200",
               isActive("/")
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:from-blue-700 hover:to-indigo-700"
+                ? "text-white shadow-lg"
                 : "text-slate-300 hover:bg-slate-800/70 hover:text-white hover:translate-x-1",
             )}
+            style={
+              isActive("/")
+                ? {
+                    background: "var(--gradient-primary)",
+                    boxShadow: "0 10px 25px -5px var(--shadow-primary)",
+                  }
+                : {}
+            }
             onClick={() => navigate("/")}
             title="All Notes (Ctrl + 1)"
           >
             <NotebookIcon className="size-5" /> All Notes
-            <span className="ml-auto text-xs opacity-75 font-mono">
-              Ctrl + 1
-            </span>
+            <span className="ml-auto text-xs opacity-75 font-mono">Ctrl + 1</span>
           </Button>
 
           <Button
@@ -71,16 +88,22 @@ export default function Sidebar() {
             className={cn(
               "w-full justify-start gap-3 h-11 rounded-lg transition-all duration-200",
               isActive("/archived")
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:from-blue-700 hover:to-indigo-700"
+                ? "text-white shadow-lg"
                 : "text-slate-300 hover:bg-slate-800/70 hover:text-white hover:translate-x-1",
             )}
+            style={
+              isActive("/archived")
+                ? {
+                    background: "var(--gradient-primary)",
+                    boxShadow: "0 10px 25px -5px var(--shadow-primary)",
+                  }
+                : {}
+            }
             onClick={() => navigate("/archived")}
             title="Archived Notes (Ctrl+2)"
           >
             <Archive className="size-5" /> Archived
-            <span className="ml-auto text-xs opacity-75 font-mono">
-              Ctrl + 2
-            </span>
+            <span className="ml-auto text-xs opacity-75 font-mono">Ctrl + 2</span>
           </Button>
 
           <Button
@@ -88,16 +111,22 @@ export default function Sidebar() {
             className={cn(
               "w-full justify-start gap-3 h-11 rounded-lg transition-all duration-200",
               isActive("/search")
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:from-blue-700 hover:to-indigo-700"
+                ? "text-white shadow-lg"
                 : "text-slate-300 hover:bg-slate-800/70 hover:text-white hover:translate-x-1",
             )}
+            style={
+              isActive("/search")
+                ? {
+                    background: "var(--gradient-primary)",
+                    boxShadow: "0 10px 25px -5px var(--shadow-primary)",
+                  }
+                : {}
+            }
             onClick={() => navigate("/search")}
             title="Search Notes (Ctrl+3)"
           >
             <Search className="size-5" /> Search
-            <span className="ml-auto text-xs opacity-75 font-mono">
-              Ctrl + 3
-            </span>
+            <span className="ml-auto text-xs opacity-75 font-mono">Ctrl + 3</span>
           </Button>
 
           <Button
@@ -105,16 +134,22 @@ export default function Sidebar() {
             className={cn(
               "w-full justify-start gap-3 h-11 rounded-lg transition-all duration-200",
               isActive("/settings")
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:from-blue-700 hover:to-indigo-700"
+                ? "text-white shadow-lg"
                 : "text-slate-300 hover:bg-slate-800/70 hover:text-white hover:translate-x-1",
             )}
+            style={
+              isActive("/settings")
+                ? {
+                    background: "var(--gradient-primary)",
+                    boxShadow: "0 10px 25px -5px var(--shadow-primary)",
+                  }
+                : {}
+            }
             onClick={() => navigate("/settings")}
             title="Settings (Ctrl+4)"
           >
             <Settings className="size-5" /> Settings
-            <span className="ml-auto text-xs opacity-75 font-mono">
-              Ctrl + 4
-            </span>
+            <span className="ml-auto text-xs opacity-75 font-mono">Ctrl + 4</span>
           </Button>
         </div>
 
@@ -133,9 +168,19 @@ export default function Sidebar() {
                   className={cn(
                     "w-full justify-start gap-2 text-sm h-9 rounded-lg transition-all duration-200",
                     location.pathname === `/tags/${tag}`
-                      ? "bg-blue-600/30 text-blue-300"
+                      ? "text-white"
                       : "text-slate-400 hover:bg-slate-800/70 hover:text-white hover:translate-x-1",
                   )}
+                  style={
+                    location.pathname === `/tags/${tag}`
+                      ? {
+                          background: "var(--gradient-primary)",
+                          opacity: 0.7,
+                          boxShadow:
+                            "0 4px 15px -3px var(--shadow-primary-light)",
+                        }
+                      : {}
+                  }
                   onClick={() => navigate(`/tags/${tag}`)}
                 >
                   <Tag className="size-4" />

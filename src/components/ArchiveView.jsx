@@ -30,7 +30,9 @@ export default function ArchiveView() {
     );
   });
 
-  const selectedNote = filteredNotes?.find((note) => note._id === selectedNoteId);
+  const selectedNote = filteredNotes?.find(
+    (note) => note._id === selectedNoteId,
+  );
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -58,7 +60,13 @@ export default function ArchiveView() {
       <div className="w-full md:w-80 flex flex-col border-r border-slate-200 bg-white/50 backdrop-blur-sm">
         <div className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-lg">
           <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/30">
+            <div
+              className="size-10 rounded-xl flex items-center justify-center shadow-lg"
+              style={{
+                background: "var(--gradient-primary)",
+                boxShadow: "0 10px 25px -5px var(--shadow-primary)",
+              }}
+            >
               <Archive className="size-5 text-white" />
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
@@ -67,12 +75,28 @@ export default function ArchiveView() {
           </div>
 
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200" />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400 transition-colors duration-200"
+              style={{
+                color: document.querySelector(":focus-within")
+                  ? "var(--color-primary)"
+                  : "",
+              }}
+            />
             <Input
               placeholder="Search archived notes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg transition-all duration-200"
+              className="pl-10 border-slate-300 rounded-lg transition-all duration-200"
+              style={{
+                "--tw-ring-color": "var(--color-primary-200)",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-primary)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "";
+              }}
             />
           </div>
         </div>
@@ -99,15 +123,26 @@ export default function ArchiveView() {
               {filteredNotes?.length === 0 ? (
                 <div className="text-center animate-in fade-in duration-500">
                   <div className="relative inline-block mb-6">
-                    <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+                    <div
+                      className="absolute inset-0 rounded-full blur-xl opacity-30 animate-pulse"
+                      style={{
+                        background: "var(--gradient-primary)",
+                      }}
+                    ></div>
                     <Archive className="relative size-16 text-slate-300" />
                   </div>
-                  <p className="text-xl font-semibold text-slate-700 mb-2">No archived notes</p>
-                  <p className="text-sm text-slate-500">Archived notes will appear here</p>
+                  <p className="text-xl font-semibold text-slate-700 mb-2">
+                    No archived notes
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    Archived notes will appear here
+                  </p>
                 </div>
               ) : (
                 <div className="text-center">
-                  <p className="text-slate-600">Select an archived note to view it</p>
+                  <p className="text-slate-600">
+                    Select an archived note to view it
+                  </p>
                 </div>
               )}
             </div>

@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+@tailwind utilities;
+
+:root {
+  /* Default theme - Blue */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: #3b82f6;
+  --color-primary-dark: #1e40af;
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  --gradient-primary-hover: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%);
+  
+  /* Shadow colors */
+  --shadow-primary: rgba(37, 99, 235, 0.3);
+  --shadow-primary-light: rgba(37, 99, 235, 0.1);
+}
+
+/* Theme utilities */
+@layer utilities {
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+  
+  .bg-primary-hover {
+    background-color: var(--color-primary-hover);
+  }
+  
+  .bg-primary-light {
+    background-color: var(--color-primary-light);
+  }
+  
+  .bg-primary-50 {
+    background-color: var(--color-primary-50);
+  }
+  
+  .bg-primary-100 {
+    background-color: var(--color-primary-100);
+  }
+  
+  .bg-primary-200 {
+    background-color: var(--color-primary-200);
+  }
+  
+  .text-primary {
+    color: var(--color-primary);
+  }
+  
+  .text-primary-hover {
+    color: var(--color-primary-hover);
+  }
+  
+  .text-primary-light {
+    color: var(--color-primary-light);
+  }
+  
+  .border-primary {
+    border-color: var(--color-primary);
+  }
+  
+  .border-primary-200 {
+    border-color: var(--color-primary-200);
+  }
+  
+  .ring-primary {
+    --tw-ring-color: var(--color-primary);
+  }
+  
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-primary-hover {
+    background: var(--gradient-primary-hover);
+  }
+  
+  .shadow-primary {
+    box-shadow: 0 10px 25px -5px var(--shadow-primary);
+  }
+  
+  .shadow-primary-light {
+    box-shadow: 0 4px 15px -3px var(--shadow-primary-light);
+  }
+}
+
+/* Hover states */
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-hover transition-all duration-200;
+  }
+  
+  .btn-primary-gradient {
+    background: var(--gradient-primary);
+    @apply text-white hover:shadow-lg transition-all duration-300;
+  }
+  
+  .btn-primary-gradient:hover {
+    background: var(--gradient-primary-hover);
+  }
+}

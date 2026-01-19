@@ -19,19 +19,19 @@ export default function NotesView() {
 
   const notes = useQuery(
     api.notes.getNotes,
-    user ? { userId: user.id, isArchived: false } : "skip",
+    user ? { userId: user.id, isArchived: false } : "skip"
   );
 
   const searchResults = useQuery(
     api.notes.searchNotes,
     user && searchTerm.trim()
       ? { userId: user.id, searchTerm: searchTerm.trim() }
-      : "skip",
+      : "skip"
   );
 
   const displayNotes = searchTerm.trim() ? searchResults : notes;
   const selectedNote = displayNotes?.find(
-    (note) => note._id === selectedNoteId,
+    (note) => note._id === selectedNoteId
   );
 
   useEffect(() => {
@@ -77,19 +77,34 @@ export default function NotesView() {
         <div className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-lg">
           <div className="flex flex-col items-start justify-between mb-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="size-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <div 
+                className="size-8 rounded-lg flex items-center justify-center shadow-lg transition-transform hover:scale-105"
+                style={{
+                  background: 'var(--gradient-primary)',
+                  boxShadow: '0 10px 25px -5px var(--shadow-primary)'
+                }}
+              >
                 <NotebookIcon className="size-5 text-white" />
               </div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
                 All Notes
               </h1>
             </div>
-
+            
             <div className="flex items-center justify-between gap-2 w-full">
               <Button
                 size="sm"
                 onClick={handleCreateNew}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-lg"
+                className="text-white gap-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-lg"
+                style={{
+                  background: 'var(--gradient-primary)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--gradient-primary-hover)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--gradient-primary)';
+                }}
               >
                 <Plus className="size-4" />
                 New Note
@@ -107,13 +122,30 @@ export default function NotesView() {
 
           {/* Search */}
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200" />
+            <Search 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400 transition-colors duration-200"
+              style={{
+                color: 'var(--color-primary)'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.color = 'var(--color-primary)';
+              }}
+            />
             <Input
               placeholder="Search by title, content, or tags..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={handleSearchFocus}
-              className="pl-10 border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg transition-all duration-200 bg-white"
+              className="pl-10 border-slate-300 rounded-lg transition-all duration-200 bg-white focus:ring-2"
+              style={{
+                '--tw-ring-color': 'var(--color-primary-200)'
+              }}
+              onFocusCapture={(e) => {
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '';
+              }}
             />
           </div>
         </div>
@@ -142,18 +174,30 @@ export default function NotesView() {
               {displayNotes?.length === 0 ? (
                 <div className="text-center animate-in fade-in duration-500">
                   <div className="relative inline-block mb-6">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+                    <div 
+                      className="absolute inset-0 rounded-full blur-xl opacity-30 animate-pulse"
+                      style={{
+                        background: 'var(--gradient-primary)'
+                      }}
+                    ></div>
                     <NotebookIcon className="relative w-16 h-16 mx-auto text-slate-300" />
                   </div>
-                  <p className="text-xl font-semibold text-slate-700 mb-2">
-                    No notes yet
-                  </p>
+                  <p className="text-xl font-semibold text-slate-700 mb-2">No notes yet</p>
                   <p className="text-sm text-slate-500 max-w-xs mx-auto mb-6">
                     Create your first note to get started on your journey
                   </p>
-                  <Button
+                  <Button 
                     onClick={handleCreateNew}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="text-white gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+                    style={{
+                      background: 'var(--gradient-primary)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'var(--gradient-primary-hover)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'var(--gradient-primary)';
+                    }}
                   >
                     <Sparkles className="size-4" />
                     Create First Note
@@ -161,15 +205,19 @@ export default function NotesView() {
                 </div>
               ) : (
                 <div className="text-center animate-in fade-in duration-500">
-                  <div className="size-16 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center">
-                    <NotebookIcon className="size-8 text-blue-600" />
+                  <div 
+                    className="size-16 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(to bottom right, var(--color-primary-100), var(--color-primary-200))'
+                    }}
+                  >
+                    <NotebookIcon 
+                      className="size-8"
+                      style={{ color: 'var(--color-primary)' }}
+                    />
                   </div>
-                  <p className="text-lg font-medium text-slate-700">
-                    Select a note to view
-                  </p>
-                  <p className="text-sm text-slate-500 mt-1">
-                    Choose from the list on the left
-                  </p>
+                  <p className="text-lg font-medium text-slate-700">Select a note to view</p>
+                  <p className="text-sm text-slate-500 mt-1">Choose from the list on the left</p>
                 </div>
               )}
             </div>
