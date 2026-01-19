@@ -15,11 +15,27 @@ import SearchView from "./components/SearchView";
 import TagsView from "./components/TagsView";
 import SettingsView from "./components/SettingsView";
 import { ThemeProvider } from "./context/ThemeContext";
+import SharedNotePage from "./components/SharedNotePage";
 
 export default function App() {
   return (
     <ThemeProvider>
       <Router>
+        <Routes>
+          <Route path="shared/:noteId" element={<SharedNotePage />} />
+
+          <Route
+              path="/"
+              element={
+                <>
+                  <SignedOut>
+                    <Homepage />
+                  </SignedOut>
+                </>
+              }
+          />
+        </Routes>
+
         <SignedIn>
           <Layout>
             <Routes>
@@ -35,9 +51,9 @@ export default function App() {
           </Layout>
         </SignedIn>
 
-        <SignedOut>
+        {/* <SignedOut>
           <Homepage />
-        </SignedOut>
+        </SignedOut> */}
 
         <Toaster richColors />
       </Router>

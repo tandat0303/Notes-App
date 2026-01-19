@@ -157,3 +157,115 @@ export const deleteNote = mutation({
     return await ctx.db.delete(args.id);
   },
 });
+
+export const getSharedNote = query({
+  args: {
+    noteId: v.id("notes"),
+  },
+  handler: async (ctx, args) => {
+    try {
+      const note = await ctx.db.get(args.noteId);
+
+      if (!note) {
+        return null;
+      }
+
+      // if (!note.isShared) {
+      //   return null;
+      // }
+
+      let authorName = note.userId;
+      // "Anonymous";
+      // if (note.userId) {
+      //   const user = await ctx.db
+      //     .query("userPreferences")
+      //     .filter((q) => q.eq(q.field("userId"), note.userId))
+      //     .first();
+        
+      //   if (user) {
+      //     authorName = user.Id;
+      //   }
+      // }
+
+      return {
+        _id: note._id,
+        title: note.title,
+        content: note.content,
+        tags: note.tags || [],
+        updatedAt: note.updatedAt,
+        createdAt: note.createdAt,
+        authorName: authorName,
+      };
+    } catch (error) {
+      console.error("Error fetching shared note:", error);
+      return null;
+    }
+  },
+});
+
+//Optional
+export const toggleShareNote = mutation({
+  args: {
+    id: v.id("notes"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const note = await ctx.db.get(args.id);
+    
+    if (!note) {
+      throw new Error("Note not found");
+    }
+
+    // Verify ownership
+    if (note.userId !== identity.subject) {
+      throw new Error("Not authorized");
+    }
+
+    // Toggle isShared field
+    await ctx.db.patch(args.id, {
+      isShared: !note.isShared,
+      sharedAt: note.isShared ? undefined : Date.now(),
+    });
+
+    return !note.isShared;
+  },
+});
+
+// Optional: Function to generate shareable link
+export const generateShareLink = mutation({
+  args: {
+    id: v.id("notes"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const note = await ctx.db.get(args.id);
+    
+    if (!note) {
+      throw new Error("Note not found");
+    }
+
+    // Verify ownership
+    if (note.userId !== identity.subject) {
+      throw new Error("Not authorized");
+    }
+
+    // Mark note as shared
+    await ctx.db.patch(args.id, {
+      isShared: true,
+      sharedAt: Date.now(),
+    });
+
+    return {
+      shareUrl: `/shared/${args.id}`,
+      noteId: args.id,
+    };
+  },
+});

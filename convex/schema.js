@@ -8,6 +8,8 @@ export default defineSchema({
     tags: v.array(v.string()),
     isArchived: v.boolean(),
     userId: v.string(),
+    isShared: v.optional(v.boolean()),
+    sharedAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -16,6 +18,11 @@ export default defineSchema({
     .searchIndex("search_notes", {
       searchField: "content",
       filterFields: ["userId", "isArchived"],
+    })
+    .index("by_shared", ["isShared"])
+    .searchIndex("search_title", {
+      searchField: "title",
+      filterFields: ["userId", "isArchived"],
     }),
 
   userPreferences: defineTable({
@@ -23,4 +30,16 @@ export default defineSchema({
     colorTheme: v.string(),
     fontTheme: v.string(),
   }).index("by_user", ["userId"]),
+
+  shareAnalytics: defineTable({
+    noteId: v.id("notes"),
+    userId: v.string(),
+    viewCount: v.number(),
+    lastViewedAt: v.optional(v.number()),
+    viewers: v.optional(v.array(v.object({
+      viewedAt: v.number(),
+      userAgent: v.optional(v.string()),
+      referrer: v.optional(v.string()),
+    }))),
+  }).index("by_note", ["noteId"]),
 });
