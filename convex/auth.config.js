@@ -1,7 +1,7 @@
 export default {
   providers: [
     {
-      domain: "https://clerk.com",
+      domain: "https://working-octopus-26.clerk.accounts.dev",
       applicationID: "convex",
     },
   ],

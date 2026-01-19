@@ -174,18 +174,17 @@ export const getSharedNote = query({
       //   return null;
       // }
 
-      let authorName = note.userId;
-      // "Anonymous";
-      // if (note.userId) {
-      //   const user = await ctx.db
-      //     .query("userPreferences")
-      //     .filter((q) => q.eq(q.field("userId"), note.userId))
-      //     .first();
+      let authorName = "Anonymous";
+      if (note.userId) {
+        const user = await ctx.db
+          .query("users")
+          .filter((q) => q.eq(q.field("clerkId"), note.userId))
+          .first();
         
-      //   if (user) {
-      //     authorName = user.Id;
-      //   }
-      // }
+        if (user && user.name) {
+          authorName = user.name;
+        }
+      }
 
       return {
         _id: note._id,

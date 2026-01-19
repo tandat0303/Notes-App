@@ -8,8 +8,10 @@
  * @module
  */
 
+import type * as debug from "../debug.js";
 import type * as notes from "../notes.js";
 import type * as userPreferences from "../userPreferences.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -18,8 +20,10 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  debug: typeof debug;
   notes: typeof notes;
   userPreferences: typeof userPreferences;
+  users: typeof users;
 }>;
 
 /**

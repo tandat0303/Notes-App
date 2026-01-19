@@ -42,4 +42,19 @@ export default defineSchema({
       referrer: v.optional(v.string()),
     }))),
   }).index("by_note", ["noteId"]),
+
+  users: defineTable({
+    clerkId: v.string(),
+    name: v.string(),
+    username: v.string(),
+    email: v.string(),
+    avatar: v.optional(v.string()),
+
+    role: v.optional(v.string()),
+    lastLoggedIn: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+  .index("by_clerkId", ["clerkId"])
+  .index("by_email", ["email"]),
 });

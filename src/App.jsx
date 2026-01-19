@@ -16,8 +16,11 @@ import TagsView from "./components/TagsView";
 import SettingsView from "./components/SettingsView";
 import { ThemeProvider } from "./context/ThemeContext";
 import SharedNotePage from "./components/SharedNotePage";
+import { useCreateRecUser } from "./hooks/useCreateRecUser";
 
 export default function App() {
+  useCreateRecUser();
+  
   return (
     <ThemeProvider>
       <Router>
@@ -50,10 +53,6 @@ export default function App() {
             </Routes>
           </Layout>
         </SignedIn>
-
-        {/* <SignedOut>
-          <Homepage />
-        </SignedOut> */}
 
         <Toaster richColors />
       </Router>

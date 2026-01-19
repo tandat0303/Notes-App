@@ -22,6 +22,14 @@ export default function NotesView() {
     user ? { userId: user.id, isArchived: false } : "skip"
   );
 
+  //Test get token
+  // const me = useQuery(api.users.whoami);
+  // console.log(me);
+
+  // const debug = useQuery(api.debug.authDebug);
+  // console.log("AUTH DEBUG:", debug);
+
+
   const searchResults = useQuery(
     api.notes.searchNotes,
     user && searchTerm.trim()
