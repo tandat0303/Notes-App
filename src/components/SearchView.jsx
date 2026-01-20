@@ -64,7 +64,7 @@ export default function SearchView() {
               </Button>
             )}
             <div
-              className="size-10 rounded-xl flex items-center justify-center shadow-lg"
+              className="size-8 rounded-xl flex items-center justify-center shadow-lg"
               style={{
                 background: "var(--gradient-primary)",
                 boxShadow: "0 10px 25px -5px var(--shadow-primary)",

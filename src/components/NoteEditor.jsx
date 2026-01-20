@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
-import { Archive, ArrowLeft, Trash2, Save, Sparkles } from "lucide-react";
+import { Archive, ArrowLeft, Trash2, Save, Sparkles, MoreVertical } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -16,10 +16,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import TipTapEditor from "./TipTapEditor";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 
 export default function NoteEditor() {
   const { noteId } = useParams();
@@ -30,6 +35,7 @@ export default function NoteEditor() {
   const [tags, setTags] = useState("");
   const [isModified, setIsModified] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const editorRef = useRef();
 
   const isNewNote = !noteId;
@@ -58,8 +64,7 @@ export default function NoteEditor() {
     const handleBeforeUnload = (e) => {
       if (isModified) {
         e.preventDefault();
-        e.returnValue =
-          "You have unsaved changes. Are you sure you want to leave?";
+        e.returnValue = "You have unsaved changes. Are you sure you want to leave?";
       }
     };
 
@@ -113,17 +118,7 @@ export default function NoteEditor() {
         setIsSaving(false);
       }
     },
-    [
-      content,
-      createNote,
-      isNewNote,
-      navigate,
-      noteId,
-      tags,
-      title,
-      updateNote,
-      user,
-    ],
+    [content, createNote, isNewNote, navigate, noteId, tags, title, updateNote, user]
   );
 
   useEffect(() => {
@@ -137,9 +132,7 @@ export default function NoteEditor() {
 
   const handleCancel = useCallback(() => {
     if (isModified) {
-      if (
-        confirm("You have unsaved changes. Are you sure you want to leave?")
-      ) {
+      if (confirm("You have unsaved changes. Are you sure you want to leave?")) {
         navigate("/");
       }
     } else {
@@ -189,9 +182,7 @@ export default function NoteEditor() {
 
     try {
       await toggleArchive({ id: noteId });
-      toast.success(
-        currentNote.isArchived ? "Note unarchived" : "Note archived",
-      );
+      toast.success(currentNote.isArchived ? "Note unarchived" : "Note archived");
       navigate("/");
     } catch (error) {
       console.error("Failed to archive note", error);
@@ -226,7 +217,7 @@ export default function NoteEditor() {
             className="gap-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100"
           >
             <ArrowLeft className="size-4" />
-            Go back
+            Back
           </Button>
 
           <div className="flex items-center gap-2">
@@ -241,8 +232,7 @@ export default function NoteEditor() {
               }}
               onMouseEnter={(e) => {
                 if (!isSaving && title.trim()) {
-                  e.currentTarget.style.background =
-                    "var(--gradient-primary-hover)";
+                  e.currentTarget.style.background = "var(--gradient-primary-hover)";
                 }
               }}
               onMouseLeave={(e) => {
@@ -262,6 +252,37 @@ export default function NoteEditor() {
               Cancel
             </Button>
 
+            {!isNewNote && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg"
+                  >
+                    <MoreVertical className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    onClick={handleArchive}
+                    className="cursor-pointer mb-1 focus:bg-slate-100"
+                  >
+                    <Archive className="size-4 mr-2" />
+                    {currentNote?.isArchived ? "Unarchive" : "Archive"} Note
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={() => setDeleteDialogOpen(true)}
+                    className="cursor-pointer text-red-600 hover:text-red-700 focus:bg-red-50 focus:text-red-700"
+                  >
+                    <Trash2 className="size-4 mr-2" />
+                    Delete Note
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>
@@ -281,9 +302,7 @@ export default function NoteEditor() {
 
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                {isNewNote
-                  ? "Create New Note"
-                  : `${currentNote?.title || "Edit Note"}`}
+                {isNewNote ? "Create New Note" : `${currentNote?.title || "Edit Note"}`}
               </h1>
               {isModified && (
                 <span
@@ -314,46 +333,14 @@ export default function NoteEditor() {
                   {currentNote?.isArchived ? "Unarchive" : "Archive"}
                 </Button>
 
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition-all duration-200"
-                    >
-                      <Trash2 className="size-4" /> Delete
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-slate-900">
-                        Delete Note
-                      </DialogTitle>
-                      <DialogDescription className="text-slate-600 pt-2">
-                        This action cannot be undone. This will permanently
-                        delete your note.
-                      </DialogDescription>
-                    </DialogHeader>
-
-                    <DialogFooter className="gap-2 sm:gap-0">
-                      <DialogClose asChild>
-                        <Button variant="outline" className="border-slate-300">
-                          Cancel
-                        </Button>
-                      </DialogClose>
-
-                      <Button
-                        variant="destructive"
-                        onClick={handleDelete}
-                        size="sm"
-                        className="gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700"
-                      >
-                        <Trash2 className="size-4" />
-                        Delete Note
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(true)}
+                  size="sm"
+                  className="gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-lg transition-all duration-200"
+                >
+                  <Trash2 className="size-4" /> Delete
+                </Button>
               </>
             )}
 
@@ -378,8 +365,7 @@ export default function NoteEditor() {
               }}
               onMouseEnter={(e) => {
                 if (!isSaving && title.trim()) {
-                  e.currentTarget.style.background =
-                    "var(--gradient-primary-hover)";
+                  e.currentTarget.style.background = "var(--gradient-primary-hover)";
                 }
               }}
               onMouseLeave={(e) => {
@@ -392,6 +378,38 @@ export default function NoteEditor() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900">
+              Delete Note
+            </DialogTitle>
+            <DialogDescription className="text-slate-600 pt-2">
+              This action cannot be undone. This will permanently delete your note.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <DialogClose asChild>
+              <Button variant="outline" className="border-slate-300">
+                Cancel
+              </Button>
+            </DialogClose>
+
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              size="sm"
+              className="gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700"
+            >
+              <Trash2 className="size-4" />
+              Delete Note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto">

@@ -61,7 +61,7 @@ export default function ArchiveView() {
         <div className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-lg">
           <div className="flex items-center gap-3 mb-4">
             <div
-              className="size-10 rounded-xl flex items-center justify-center shadow-lg"
+              className="size-8 rounded-xl flex items-center justify-center shadow-lg"
               style={{
                 background: "var(--gradient-primary)",
                 boxShadow: "0 10px 25px -5px var(--shadow-primary)",
