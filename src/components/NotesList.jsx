@@ -3,7 +3,7 @@ import { Skeleton } from './ui/skeleton'
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Badge } from './ui/badge';
-import { Clock, FileText } from 'lucide-react';
+import { Clock, FileText, Lock } from 'lucide-react';
 
 export default function NotesList({ notes, selectedNoteId, onNoteSelect, loading }) {
   if (loading) {
@@ -30,12 +30,7 @@ export default function NotesList({ notes, selectedNoteId, onNoteSelect, loading
       <div className='p-8 text-center'>
         <FileText className='size-12 mx-auto mb-3 text-slate-300' />
         <p className='text-slate-500 font-medium'>No notes found</p>
-        <p className='text-sm text-slate-400 mt-1'>
-          {!window.location.pathname.includes("archived")
-            ? "Create your first note to get started"
-            : "You haven't saved any notes yet."
-          }
-        </p>
+        <p className='text-sm text-slate-400 mt-1'>Create your first note to get started</p>
       </div>
     );
   }
@@ -57,101 +52,134 @@ export default function NotesList({ notes, selectedNoteId, onNoteSelect, loading
 
   return (
     <div className='p-3 space-y-2'>
-      {notes.map((note) => (
-        <button 
-          key={note._id} 
-          onClick={() => onNoteSelect(note._id)}
-          className={cn(
-            "w-full p-4 text-left rounded-xl transition-all duration-300 group relative overflow-hidden",
-            "hover:shadow-md hover:-translate-y-0.5",
-            selectedNoteId === note._id 
-              ? "shadow-lg border-2" 
-              : "bg-white border border-slate-200"
-          )}
-          style={selectedNoteId === note._id ? {
-            background: 'linear-gradient(to bottom right, var(--color-primary-50), var(--color-primary-100))',
-            borderColor: 'var(--color-primary-200)',
-            boxShadow: '0 10px 25px -5px var(--shadow-primary-light)'
-          } : {}}
-        >
-          {/* Selected indicator */}
-          {selectedNoteId === note._id && (
-            <div 
-              className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full"
-              style={{
-                background: 'var(--gradient-primary)'
-              }}
-            ></div>
-          )}
-
-          <div className='space-y-3 pl-2'>
-            <h3 
-              className={cn(
-                'font-semibold text-base line-clamp-1 transition-colors duration-200',
-                selectedNoteId === note._id 
-                  ? 'text-slate-900' 
-                  : 'text-slate-800 group-hover:text-slate-900'
-              )}
-              style={selectedNoteId !== note._id ? {
-                color: 'inherit'
-              } : {}}
-            >
-              {note.title || "Untitled"}
-            </h3>
-
-            {note.content && (
-              <p className='text-sm text-slate-600 line-clamp-2 leading-relaxed'>
-                {truncateContent(note.content)}
-              </p>
+      {notes.map((note) => {
+        const isLocked = note.isLocked || false;
+        
+        return (
+          <button 
+            key={note._id} 
+            onClick={() => onNoteSelect(note._id)}
+            className={cn(
+              "w-full p-4 text-left rounded-xl transition-all duration-300 group relative overflow-hidden",
+              "hover:shadow-md hover:-translate-y-0.5",
+              selectedNoteId === note._id 
+                ? "shadow-lg border-2" 
+                : "bg-white border border-slate-200",
+              isLocked && "border-amber-200 bg-gradient-to-br from-amber-50/50 to-white"
+            )}
+            style={selectedNoteId === note._id ? {
+              background: isLocked 
+                ? 'linear-gradient(to bottom right, #fef3c7, #fed7aa)'
+                : 'linear-gradient(to bottom right, var(--color-primary-50), var(--color-primary-100))',
+              borderColor: isLocked ? '#fbbf24' : 'var(--color-primary-200)',
+              boxShadow: isLocked 
+                ? '0 10px 25px -5px rgba(245, 158, 11, 0.2)'
+                : '0 10px 25px -5px var(--shadow-primary-light)'
+            } : {}}
+          >
+            {/* Selected indicator */}
+            {selectedNoteId === note._id && (
+              <div 
+                className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full"
+                style={{
+                  background: isLocked 
+                    ? 'linear-gradient(to bottom, #f59e0b, #ea580c)'
+                    : 'var(--gradient-primary)'
+                }}
+              ></div>
             )}
 
-            <div className='flex flex-wrap gap-2 items-center justify-between pt-1'>
-              <div className='flex gap-1.5 flex-wrap'>
-                {note.tags?.slice(0, 3).map((tag, index) => (
-                  <Badge 
-                    key={index} 
-                    className={cn(
-                      "text-xs px-2.5 py-0.5 font-medium rounded-full transition-all duration-200",
-                      selectedNoteId === note._id
-                        ? "text-white hover:shadow-md"
-                        : "hover:shadow-sm"
-                    )}
-                    style={selectedNoteId === note._id ? {
-                      background: 'var(--gradient-primary)'
-                    } : {
-                      backgroundColor: 'var(--color-primary-50)',
-                      color: 'var(--color-primary-700)',
-                      borderColor: 'var(--color-primary-200)',
-                      borderWidth: '1px'
-                    }}
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-
-                {note.tags?.length > 3 && (
-                  <Badge 
-                    variant="outline" 
-                    className="text-xs px-2.5 py-0.5 rounded-full font-medium"
-                    style={{
-                      borderColor: 'var(--color-primary-300)',
-                      color: 'var(--color-primary-600)',
-                      backgroundColor: 'var(--color-primary-50)'
-                    }}
-                  >
-                    +{note.tags.length - 3}
-                  </Badge>
+            <div className='space-y-3 pl-2'>
+              {/* Title with Lock Icon */}
+              <div className="flex items-start gap-2">
+                <h3 
+                  className={cn(
+                    'font-semibold text-base line-clamp-1 transition-colors duration-200 flex-1',
+                    selectedNoteId === note._id 
+                      ? 'text-slate-900' 
+                      : 'text-slate-800 group-hover:text-slate-900'
+                  )}
+                >
+                  {note.title || "Untitled"}
+                </h3>
+                {isLocked && (
+                  <Lock 
+                    className="size-4 flex-shrink-0 mt-0.5"
+                    style={{ color: '#f59e0b' }}
+                  />
                 )}
               </div>
 
-              <span className='flex items-center gap-1.5 text-xs text-slate-500 font-medium'>
-                <Clock className='size-3' />
-                {formatDate(note.updatedAt)}
-              </span>
+              {/* Content Preview - Hidden if locked */}
+              {!isLocked && note.content && (
+                <p className='text-sm text-slate-600 line-clamp-2 leading-relaxed'>
+                  {truncateContent(note.content)}
+                </p>
+              )}
+
+              {/* Locked Message */}
+              {isLocked && (
+                <p className='text-sm text-amber-700 italic flex items-center gap-1.5'>
+                  <Lock className="size-3" />
+                  <span>This note is locked</span>
+                </p>
+              )}
+
+              <div className='flex flex-wrap gap-2 items-center justify-between pt-1'>
+                <div className='flex gap-1.5 flex-wrap'>
+                  {note.tags?.slice(0, 3).map((tag, index) => (
+                    <Badge 
+                      key={index} 
+                      className={cn(
+                        "text-xs px-2.5 py-0.5 font-medium rounded-full transition-all duration-200",
+                        selectedNoteId === note._id && isLocked
+                          ? "bg-amber-600 text-white"
+                          : selectedNoteId === note._id
+                          ? "text-white"
+                          : isLocked
+                          ? "bg-amber-100 text-amber-700 border border-amber-300"
+                          : ""
+                      )}
+                      style={selectedNoteId === note._id && !isLocked ? {
+                        background: 'var(--gradient-primary)'
+                      } : !isLocked && selectedNoteId !== note._id ? {
+                        backgroundColor: 'var(--color-primary-50)',
+                        color: 'var(--color-primary-700)',
+                        borderColor: 'var(--color-primary-200)',
+                        borderWidth: '1px'
+                      } : {}}
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+
+                  {note.tags?.length > 3 && (
+                    <Badge 
+                      variant="outline" 
+                      className={cn(
+                        "text-xs px-2.5 py-0.5 rounded-full font-medium",
+                        isLocked && "border-amber-300 text-amber-600 bg-amber-50"
+                      )}
+                      style={!isLocked ? {
+                        borderColor: 'var(--color-primary-300)',
+                        color: 'var(--color-primary-600)',
+                        backgroundColor: 'var(--color-primary-50)'
+                      } : {}}
+                    >
+                      +{note.tags.length - 3}
+                    </Badge>
+                  )}
+                </div>
+
+                <span className='flex items-center gap-1.5 text-xs text-slate-500 font-medium'>
+                  <Clock className='size-3' />
+                  {formatDate(note.updatedAt)}
+                </span>
+              </div>
             </div>
-          </div>
-        </button>
-      ))}
+          </button>
+        );
+      })}
     </div>
   )
 }

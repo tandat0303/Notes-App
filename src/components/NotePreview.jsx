@@ -5,12 +5,13 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Archive, MoreVertical, Pencil, Share, Trash2 } from "lucide-react";
+import { Archive, MoreVertical, Pencil, Share, Trash2, Lock, Unlock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
 import {
   Dialog,
@@ -23,12 +24,27 @@ import {
   DialogTrigger,
 } from "./ui/dialog";
 import ShareDialog from "./ShareDialog";
+import { LockNoteDialog } from "./LockNoteDialog";
+import { LockedNotePreview } from "./LockedNotePreview";
+import { Switch } from "./ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 export default function NotePreview({ note, onEdit }) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [lockDialogOpen, setLockDialogOpen] = useState(false);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const [isShared, setIsShared] = useState(note.isShared);
 
   const toggleArchive = useMutation(api.notes.toggleArchiveNote);
   const deleteNote = useMutation(api.notes.deleteNote);
+  const setNoteLock = useMutation(api.notes.setNoteLock);
+  const unlockNote = useMutation(api.notes.unlockNote);
+
+  const isLocked = note.isLocked || false;
+
+  const toggleShare = useMutation(api.notes.toggleShareNote);
 
   const formatDate = (timestamp) => {
     try {
@@ -39,6 +55,11 @@ export default function NotePreview({ note, onEdit }) {
   };
 
   const handleArchive = async () => {
+    if (isLocked) {
+      toast.error("Cannot archive a locked note. Unlock it first.");
+      return;
+    }
+
     try {
       await toggleArchive({ id: note._id });
       toast.success(note.isArchived ? "Note unarchived" : "Note archived");
@@ -49,6 +70,11 @@ export default function NotePreview({ note, onEdit }) {
   };
 
   const handleDelete = async () => {
+    if (isLocked) {
+      toast.error("Cannot delete a locked note. Unlock it first.");
+      return;
+    }
+
     try {
       await deleteNote({ id: note._id });
       toast.success("Note deleted");
@@ -57,9 +83,61 @@ export default function NotePreview({ note, onEdit }) {
     }
   };
 
+  const handleLock = async (password) => {
+    try {
+      await setNoteLock({ id: note._id, password });
+      toast.success("Note locked successfully");
+    } catch (error) {
+      toast.error("Failed to lock note");
+      throw error;
+    }
+  };
+
+  const handleUnlock = async (password) => {
+    try {
+      await unlockNote({ id: note._id, password });
+      toast.success("Note unlocked successfully");
+    } catch (error) {
+      toast.error("Incorrect password");
+      throw error;
+    }
+  };
+
   const handleShare = () => {
+    if (isLocked) {
+      toast.error("Cannot share a locked note. Unlock it first.");
+      return;
+    }
     setShareDialogOpen(true);
   };
+
+  const handleEdit = () => {
+    if (isLocked) {
+      toast.error("Cannot edit a locked note. Unlock it first.");
+      return;
+    }
+    onEdit();
+  };
+
+  // Show locked state
+  if (isLocked) {
+    return (
+      <>
+        <LockedNotePreview 
+          note={note} 
+          onUnlockClick={() => setUnlockDialogOpen(true)} 
+        />
+        
+        <LockNoteDialog
+          open={unlockDialogOpen}
+          onOpenChange={setUnlockDialogOpen}
+          onConfirm={handleUnlock}
+          isLocking={false}
+          noteName={note.title}
+        />
+      </>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -95,39 +173,57 @@ export default function NotePreview({ note, onEdit }) {
               </div>
 
               <div className="flex items-center gap-2 text-xs">
-                <span className="font-semibold text-slate-700">
-                  Last edited:
-                </span>
-                <span className="text-slate-500">
-                  {formatDate(note.updatedAt)}
-                </span>
+                <span className="font-semibold text-slate-700">Last edited:</span>
+                <span className="text-slate-500">{formatDate(note.updatedAt)}</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2 ml-4">
+            {note.isShared ? "Public" : "Private"}
+            <Switch 
+              className= "data-[state=checked]:bg-green-500 [&>span]:bg-white"
+              checked={isShared}
+              onCheckedChange={async () => {
+                setIsShared(prev => !prev);
+                try {
+                  await toggleShare({ id: note._id });
+                } catch {
+                  setIsShared(prev => !prev);
+                  toast.error("Failed to update share state");
+                }
+              }}
+            />
+
             <Button
               variant="outline"
               size="sm"
-              onClick={onEdit}
+              onClick={handleEdit}
               className="gap-2 border-slate-300 text-slate-700 text-sm hover:bg-slate-50 rounded-lg transition-all duration-200"
-              style={{
-                "--tw-ring-color": "var(--color-primary-200)",
-              }}
             >
               <Pencil className="size-4" />
               Edit
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-              className="gap-2 border-slate-300 text-slate-700 text-sm hover:bg-slate-50 rounded-lg transition-all duration-200"
-            >
-              <Share className="size-4" />
-              Share
-            </Button>
+            <TooltipProvider delayDuration={1000}>
+              <Tooltip>
+                <TooltipTrigger>
+                  <span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!note.isShared}
+                      onClick={handleShare}
+                      className="gap-2 border-slate-300 text-slate-700 text-sm hover:bg-slate-50 rounded-lg transition-all duration-200"
+                    >
+                      <Share className="size-4" />
+                      Share
+                    </Button>
+                  </span>
+                {!note.isShared && <TooltipContent>Sharing will be enable when note is public</TooltipContent>}
+                </TooltipTrigger>
+              </Tooltip>
+            </TooltipProvider>  
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -142,53 +238,30 @@ export default function NotePreview({ note, onEdit }) {
 
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
+                  onClick={() => setLockDialogOpen(true)}
+                  className="cursor-pointer focus:bg-amber-50"
+                >
+                  <Lock className="size-4 mr-2 text-amber-600" />
+                  <span className="text-amber-700">Lock Note</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
                   onClick={handleArchive}
-                  className="cursor-pointer mb-1 focus:bg-slate-100"
+                  className="cursor-pointer focus:bg-slate-100"
                 >
                   <Archive className="size-4 mr-2" />
                   {note.isArchived ? "Unarchive" : "Archive"} Note
                 </DropdownMenuItem>
 
-                <Dialog>
-                  <DialogTrigger asChild className="w-full">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="size-4 mr-2" />
-                      Delete Note
-                    </Button>
-                  </DialogTrigger>
-
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-slate-900">
-                        Delete Note
-                      </DialogTitle>
-                      <DialogDescription className="text-slate-600 pt-2">
-                        This action cannot be undone. This will permanently
-                        delete your note.
-                      </DialogDescription>
-                    </DialogHeader>
-
-                    <DialogFooter className="gap-2 sm:gap-0">
-                      <DialogClose asChild>
-                        <Button variant="outline" className="border-slate-300">
-                          Cancel
-                        </Button>
-                      </DialogClose>
-
-                      <Button
-                        onClick={handleDelete}
-                        variant="destructive"
-                        className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700"
-                      >
-                        <Trash2 className="size-4 mr-2" />
-                        Delete Note
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                <DropdownMenuItem
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="cursor-pointer text-red-600 hover:text-red-700 focus:bg-red-50 focus:text-red-700"
+                >
+                  <Trash2 className="size-4 mr-2" />
+                  Delete Note
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -200,18 +273,56 @@ export default function NotePreview({ note, onEdit }) {
         <div
           className="p-6 prose prose-slate max-w-none leading-relaxed"
           dangerouslySetInnerHTML={{
-            __html:
-              note.content ||
-              '<p class="text-slate-400 italic">No content available</p>',
+            __html: note.content || '<p class="text-slate-400 italic">No content available</p>',
           }}
         />
       </div>
 
+      {/* Dialogs */}
       <ShareDialog
         open={shareDialogOpen}
         onOpenChange={setShareDialogOpen}
         note={note}
       />
+
+      <LockNoteDialog
+        open={lockDialogOpen}
+        onOpenChange={setLockDialogOpen}
+        onConfirm={handleLock}
+        isLocking={true}
+        noteName={note.title}
+      />
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900">
+              Delete Note
+            </DialogTitle>
+            <DialogDescription className="text-slate-600 pt-2">
+              This action cannot be undone. This will permanently delete your note.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <DialogClose asChild>
+              <Button variant="outline" className="border-slate-300">
+                Cancel
+              </Button>
+            </DialogClose>
+
+            <Button
+              onClick={handleDelete}
+              variant="destructive"
+              className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700"
+            >
+              <Trash2 className="size-4 mr-2" />
+              Delete Note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

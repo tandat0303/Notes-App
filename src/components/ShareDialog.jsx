@@ -20,6 +20,8 @@ import {
   Eye,
   Globe,
 } from "lucide-react";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export default function ShareDialog({ open, onOpenChange, note }) {
   const [copied, setCopied] = useState(false);
@@ -27,10 +29,17 @@ export default function ShareDialog({ open, onOpenChange, note }) {
   const shareURL = `${window.location.origin}/shared/${note._id}`;
   const shareText = `Check out this note: ${note.title}`;
 
+  const updateShareNote = useMutation(api.notes.updateSharedNote);
+
+  if (!note) return null; 
+
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(shareURL);
       setCopied(true);
+      await updateShareNote({
+        id: note._id,
+      })
       toast.success("Link copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {

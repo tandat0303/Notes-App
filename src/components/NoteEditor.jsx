@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
-import { Archive, ArrowLeft, Trash2, Save, Sparkles, MoreVertical } from "lucide-react";
+import { Archive, ArrowLeft, Trash2, Save, Sparkles, MoreVertical, Lock, Unlock, Share } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -14,17 +14,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "./ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import TipTapEditor from "./TipTapEditor";
+import { LockNoteDialog } from "./LockNoteDialog";
+import { LockedNotePreview } from "./LockedNotePreview";
+import ShareDialog from "./ShareDialog";
+import { Switch } from "./ui/switch";
 
 export default function NoteEditor() {
   const { noteId } = useParams();
@@ -35,7 +39,11 @@ export default function NoteEditor() {
   const [tags, setTags] = useState("");
   const [isModified, setIsModified] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isShared, setIsShared] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [lockDialogOpen, setLockDialogOpen] = useState(false);
+  const [unlockDialogOpen, setUnlockDialogOpen] = useState(false);
   const editorRef = useRef();
 
   const isNewNote = !noteId;
@@ -49,16 +57,21 @@ export default function NoteEditor() {
   const updateNote = useMutation(api.notes.updateNote);
   const deleteNote = useMutation(api.notes.deleteNote);
   const toggleArchive = useMutation(api.notes.toggleArchiveNote);
+  const toggleShare = useMutation(api.notes.toggleShareNote);
+  const setNoteLock = useMutation(api.notes.setNoteLock);
+  const unlockNote = useMutation(api.notes.unlockNote);
 
   const currentNote = note?.find((n) => n._id === noteId);
+  const isLocked = currentNote?.isLocked || false;
 
   useEffect(() => {
-    if (currentNote && !isModified) {
-      setTitle(currentNote.title || "");
-      setContent(currentNote.content || "");
-      setTags(currentNote.tags?.join(", ") || "");
-    }
-  }, [currentNote, isModified]);
+  if (currentNote && !isModified) {
+    setTitle(currentNote.title || "");
+    setContent(currentNote.content || "");
+    setTags(currentNote.tags?.join(", ") || "");
+    setIsShared(currentNote.isShared || false);
+  }
+}, [currentNote, isModified]);
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -72,12 +85,39 @@ export default function NoteEditor() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isModified]);
 
+  const handleToggleShare = async () => {
+  if (!currentNote) return;
+  
+  if (isLocked) {
+    toast.error("Cannot change sharing settings for a locked note. Unlock it first.");
+    return;
+  }
+
+  const newShareState = !isShared;
+  setIsShared(newShareState);
+  
+  try {
+    await toggleShare({ id: noteId });
+    toast.success(newShareState ? "Note is now public" : "Note is now private");
+  } catch (error) {
+    // Revert state on error
+    setIsShared(!newShareState);
+    toast.error("Failed to update share settings");
+    console.error("Failed to toggle share:", error);
+  }
+};
+
   const handleSave = useCallback(
     async (silent = false) => {
       if (!user || !title.trim()) {
         if (!title.trim()) {
           toast.error("Please enter a title for your note");
         }
+        return;
+      }
+
+      if (isLocked) {
+        toast.error("Cannot edit a locked note. Unlock it first.");
         return;
       }
 
@@ -118,17 +158,17 @@ export default function NoteEditor() {
         setIsSaving(false);
       }
     },
-    [content, createNote, isNewNote, navigate, noteId, tags, title, updateNote, user]
+    [content, createNote, isNewNote, navigate, noteId, tags, title, updateNote, user, isLocked]
   );
 
   useEffect(() => {
-    if (isModified && !isNewNote && title.trim()) {
+    if (isModified && !isNewNote && title.trim() && !isLocked) {
       const saveTimer = setTimeout(async () => {
         handleSave(true);
       }, 2000);
       return () => clearTimeout(saveTimer);
     }
-  }, [title, content, tags, isModified, isNewNote, handleSave]);
+  }, [title, content, tags, isModified, isNewNote, handleSave, isLocked]);
 
   const handleCancel = useCallback(() => {
     if (isModified) {
@@ -167,6 +207,11 @@ export default function NoteEditor() {
   const handleDelete = async () => {
     if (!currentNote) return;
 
+    if (isLocked) {
+      toast.error("Cannot delete a locked note. Unlock it first.");
+      return;
+    }
+
     try {
       await deleteNote({ id: noteId });
       toast.success("Note deleted");
@@ -180,6 +225,11 @@ export default function NoteEditor() {
   const handleArchive = async () => {
     if (!currentNote) return;
 
+    if (isLocked) {
+      toast.error("Cannot archive a locked note. Unlock it first.");
+      return;
+    }
+
     try {
       await toggleArchive({ id: noteId });
       toast.success(currentNote.isArchived ? "Note unarchived" : "Note archived");
@@ -190,20 +240,112 @@ export default function NoteEditor() {
     }
   };
 
+  const handleShare = () => {
+    if (isLocked) {
+      toast.error("Cannot share a locked note. Unlock it first.");
+      return;
+    }
+    setShareDialogOpen(true);
+  };
+
+  const handleLock = async (password) => {
+    try {
+      await setNoteLock({ id: noteId, password });
+      toast.success("Note locked successfully");
+    } catch (error) {
+      toast.error("Failed to lock note");
+      throw error;
+    }
+  };
+
+  const handleUnlock = async (password) => {
+    try {
+      await unlockNote({ id: noteId, password });
+      toast.success("Note unlocked successfully");
+    } catch (error) {
+      toast.error("Incorrect password");
+      throw error;
+    }
+  };
+
   const handleTitleChange = (value) => {
+    if (isLocked) {
+      toast.error("Cannot edit a locked note");
+      return;
+    }
     setTitle(value);
     setIsModified(true);
   };
 
   const handleContentChange = (value) => {
+    if (isLocked) {
+      toast.error("Cannot edit a locked note");
+      return;
+    }
     setContent(value);
     setIsModified(true);
   };
 
   const handleTagsChange = (value) => {
+    if (isLocked) {
+      toast.error("Cannot edit a locked note");
+      return;
+    }
     setTags(value);
     setIsModified(true);
   };
+
+  // Show locked preview for locked notes
+  if (isLocked && !isNewNote) {
+    return (
+      <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50">
+        {/* Mobile Header */}
+        <div className="md:hidden p-4 border-b border-slate-200 bg-white/80 backdrop-blur-lg shadow-sm">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="gap-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100"
+            >
+              <ArrowLeft className="size-4" />
+              Back
+            </Button>
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden md:block p-6 border-b border-slate-200 bg-white/80 backdrop-blur-lg shadow-sm">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="gap-2 text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+              {currentNote?.title || "Locked Note"}
+            </h1>
+          </div>
+        </div>
+
+        <LockedNotePreview 
+          note={currentNote} 
+          onUnlockClick={() => setUnlockDialogOpen(true)} 
+        />
+
+        <LockNoteDialog
+          open={unlockDialogOpen}
+          onOpenChange={setUnlockDialogOpen}
+          onConfirm={handleUnlock}
+          isLocking={false}
+          noteName={currentNote?.title}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -266,6 +408,16 @@ export default function NoteEditor() {
 
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem
+                    onClick={() => setLockDialogOpen(true)}
+                    className="cursor-pointer focus:bg-amber-50"
+                  >
+                    <Lock className="size-4 mr-2 text-amber-600" />
+                    <span className="text-amber-700">Lock Note</span>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem
                     onClick={handleArchive}
                     className="cursor-pointer mb-1 focus:bg-slate-100"
                   >
@@ -279,6 +431,15 @@ export default function NoteEditor() {
                   >
                     <Trash2 className="size-4 mr-2" />
                     Delete Note
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={handleShare}
+                    className="cursor-pointer mb-1 focus:bg-slate-100"
+                    disabled={!isShared}
+                  >
+                    <Share className="size-4 mr-2" />
+                    Share Note
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -323,6 +484,16 @@ export default function NoteEditor() {
           <div className="flex items-center gap-2">
             {!isNewNote && (
               <>
+                <Button
+                  variant="outline"
+                  onClick={() => setLockDialogOpen(true)}
+                  size="sm"
+                  className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50 rounded-lg transition-all duration-200"
+                >
+                  <Lock className="size-4" />
+                  Lock Note
+                </Button>
+
                 <Button
                   variant="outline"
                   onClick={handleArchive}
@@ -411,8 +582,40 @@ export default function NoteEditor() {
         </DialogContent>
       </Dialog>
 
+      {/* Lock Note Dialog */}
+      <LockNoteDialog
+        open={lockDialogOpen}
+        onOpenChange={setLockDialogOpen}
+        onConfirm={handleLock}
+        isLocking={true}
+        noteName={currentNote?.title}
+      />
+
+      {currentNote && (
+        <ShareDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          note={currentNote}
+        />
+      )}
+
       {/* Form */}
       <div className="flex-1 overflow-y-auto">
+        {!isNewNote && (
+            <div className="flex justify-center">
+              <div className="flex items-center gap-2 px-4 py-2">
+                <span className="text-sm font-medium text-slate-600">
+                  {isShared ? "Public" : "Private"}
+                </span>
+                <Switch 
+                  className="data-[state=checked]:bg-green-500 [&>span]:bg-white"
+                  checked={isShared}
+                  onCheckedChange={handleToggleShare}
+                  disabled={isLocked}
+                />
+              </div>
+            </div>
+          )}
         <div className="max-w-4xl mx-auto p-6 space-y-6">
           <div className="space-y-2">
             <Input
@@ -421,6 +624,7 @@ export default function NoteEditor() {
               placeholder="Enter note title..."
               className="!text-3xl font-bold border-0 px-4 py-6 shadow-none focus:outline-none !focus:ring-0 !focus:border-0 placeholder:text-slate-400 bg-transparent"
               autoFocus
+              disabled={isLocked}
             />
           </div>
 
@@ -453,6 +657,7 @@ export default function NoteEditor() {
               onBlur={(e) => {
                 e.currentTarget.style.borderColor = "";
               }}
+              disabled={isLocked}
             />
             <p className="text-xs text-slate-500 flex items-center gap-1">
               <span className="size-1 bg-slate-400 rounded-full"></span>
@@ -477,6 +682,7 @@ export default function NoteEditor() {
                 content={content}
                 onChange={handleContentChange}
                 placeholder="Start writing your note..."
+                editable={!isLocked}
               />
             </div>
           </div>
