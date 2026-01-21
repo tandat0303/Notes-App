@@ -1,6 +1,148 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
+function hashPassword(password) {
+  // Simple hash - in production use proper crypto library
+  let hash = 0;
+  for (let i = 0; i < password.length; i++) {
+    const char = password.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString(36);
+}
+
+// Set lock on note
+export const setNoteLock = mutation({
+  args: {
+    id: v.id("notes"),
+    password: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const note = await ctx.db.get(args.id);
+    if (!note) {
+      throw new Error("Note not found");
+    }
+
+    if (note.userId !== identity.subject) {
+      throw new Error("Not authorized");
+    }
+
+    const passwordHash = hashPassword(args.password);
+
+    await ctx.db.patch(args.id, {
+      isLocked: true,
+      passwordHash: passwordHash,
+      lockedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+// Unlock note (verify password)
+export const unlockNote = mutation({
+  args: {
+    id: v.id("notes"),
+    password: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const note = await ctx.db.get(args.id);
+    if (!note) {
+      throw new Error("Note not found");
+    }
+
+    if (note.userId !== identity.subject) {
+      throw new Error("Not authorized");
+    }
+
+    if (!note.isLocked || !note.passwordHash) {
+      throw new Error("Note is not locked");
+    }
+
+    const passwordHash = hashPassword(args.password);
+    
+    if (passwordHash !== note.passwordHash) {
+      throw new Error("Incorrect password");
+    }
+
+    await ctx.db.patch(args.id, {
+      isLocked: false,
+      passwordHash: undefined,
+      lockedAt: undefined,
+    });
+
+    return { success: true };
+  },
+});
+
+export const unlockSharedNote = mutation({
+  args: {
+    id: v.id("notes"),
+    password: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const note = await ctx.db.get(args.id);
+    
+    if (!note) {
+      throw new Error("Note not found");
+    }
+
+    if (!note.isShared) {
+      throw new Error("This note is not shared");
+    }
+
+    if (note.isArchived) {
+      throw new Error("This note is archived");
+    }
+
+    if (!note.isLocked || !note.passwordHash) {
+      throw new Error("Note is not locked");
+    }
+
+    const passwordHash = hashPassword(args.password);
+    
+    if (passwordHash !== note.passwordHash) {
+      throw new Error("Incorrect password");
+    }
+
+    return { 
+      success: true,
+      content: note.content,
+      title: note.title,
+      tags: note.tags || [],
+    };
+  },
+});
+
+// Check if note is locked
+export const checkNoteLock = query({
+  args: {
+    id: v.id("notes"),
+  },
+  handler: async (ctx, args) => {
+    const note = await ctx.db.get(args.id);
+    if (!note) {
+      return null;
+    }
+
+    return {
+      isLocked: note.isLocked || false,
+      lockedAt: note.lockedAt,
+    };
+  },
+});
+
 export const getNotes = query({
   args: {
     userId: v.string(),
@@ -31,6 +173,16 @@ export const getNotes = query({
     return notes;
   },
 });
+
+export const getNoteById = query({
+  args: {
+    id: v.id("notes"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
 
 export const searchNotes = query({
   args: {
@@ -114,6 +266,8 @@ export const createNote = mutation({
       content: args.content,
       tags: args.tags,
       isArchived: false,
+      isLocked: false,
+      isShared: false,
       userId: args.userId,
       createdAt: now,
       updatedAt: now,
@@ -134,6 +288,17 @@ export const updateNote = mutation({
     return await ctx.db.patch(id, {
       ...updates,
       updatedAt: Date.now(),
+    });
+  },
+});
+
+export const updateSharedNote = mutation({
+  args: {
+    id: v.id("notes"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.patch(args.id, {
+      sharedAt: Date.now(),
     });
   },
 });
@@ -170,9 +335,13 @@ export const getSharedNote = query({
         return null;
       }
 
-      // if (!note.isShared) {
-      //   return null;
-      // }
+      if (!note.isShared) {
+        return null;
+      }
+
+      if (note.isArchived) {
+        return null;
+      }
 
       let authorName = "Anonymous";
       if (note.userId) {
@@ -189,8 +358,11 @@ export const getSharedNote = query({
       return {
         _id: note._id,
         title: note.title,
-        content: note.content,
+        content: note.isLocked ? null : note.content,
         tags: note.tags || [],
+        isShared: note.isShared,
+        isLocked: note.isLocked || false,
+        lockedAt: note.lockedAt,
         updatedAt: note.updatedAt,
         createdAt: note.createdAt,
         authorName: authorName,
@@ -227,7 +399,6 @@ export const toggleShareNote = mutation({
     // Toggle isShared field
     await ctx.db.patch(args.id, {
       isShared: !note.isShared,
-      sharedAt: note.isShared ? undefined : Date.now(),
     });
 
     return !note.isShared;
