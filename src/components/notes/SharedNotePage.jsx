@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 import { formatDistanceToNow } from "date-fns";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -15,9 +15,9 @@ import {
   ExternalLink,
   Shield
 } from "lucide-react";
-import { Skeleton } from "./ui/skeleton";
+import { Skeleton } from "../ui/skeleton";
 import { toast } from "sonner";
-import { LockNoteDialog } from "./LockNoteDialog";
+import { LockNoteDialog } from "../dialogs/LockNoteDialog";
 
 export default function SharedNotePage() {
   const { noteId } = useParams();
@@ -32,6 +32,23 @@ export default function SharedNotePage() {
   );
 
   const unlockSharedNote = useMutation(api.notes.unlockSharedNote);
+  const trackNoteView = useMutation(api.notes.trackNoteView);
+
+  useEffect(() => {
+    if (sharedNote && noteId) {
+      const timer = setTimeout(() => {
+        trackNoteView({
+          noteId: noteId,
+          userAgent: navigator.userAgent,
+          referrer: document.referrer || undefined,
+        }).catch(err => {
+          console.error("Failed to track view:", err);
+        });
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [sharedNote, noteId, trackNoteView]);
 
   const formatDate = (timestamp) => {
     try {

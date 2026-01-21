@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import NotesList from "./NotesList";
 import NotePreview from "./NotePreview";
-import { api } from "../../convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 import { NotebookIcon } from "lucide-react";
 
 export default function NotesView() {

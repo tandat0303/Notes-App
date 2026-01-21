@@ -6,9 +6,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 import {
   Copy,
   Check,
@@ -21,7 +21,7 @@ import {
   Globe,
 } from "lucide-react";
 import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 
 export default function ShareDialog({ open, onOpenChange, note }) {
   const [copied, setCopied] = useState(false);
@@ -31,7 +31,7 @@ export default function ShareDialog({ open, onOpenChange, note }) {
 
   const updateShareNote = useMutation(api.notes.updateSharedNote);
 
-  if (!note) return null; 
+  if (!note) return null;
 
   const copyToClipboard = async () => {
     try {

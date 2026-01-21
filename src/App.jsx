@@ -7,15 +7,15 @@ import {
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import { Toaster } from "sonner";
 import Homepage from "./components/Homepage";
-import Layout from "./components/Layout";
-import NotesView from "./components/NotesView";
-import NoteEditor from "./components/NoteEditor";
-import ArchiveView from "./components/ArchiveView";
-import SearchView from "./components/SearchView";
-import TagsView from "./components/TagsView";
-import SettingsView from "./components/SettingsView";
+import Layout from "./components/layout/Layout";
+import NotesView from "./components/notes/NotesView";
+import NoteEditor from "./components/notes/NoteEditor";
+import ArchiveView from "./components/notes/ArchiveView";
+import SearchView from "./components/search/SearchView";
+import TagsView from "./components/tags/TagsView";
+import SettingsView from "./components/settings/SettingsView";
 import { ThemeProvider } from "./context/ThemeContext";
-import SharedNotePage from "./components/SharedNotePage";
+import SharedNotePage from "./components/notes/SharedNotePage";
 import { useCreateRecUser } from "./hooks/useCreateRecUser";
 
 export default function App() {

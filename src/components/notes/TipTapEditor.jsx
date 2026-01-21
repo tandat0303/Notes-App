@@ -10,7 +10,7 @@ import React, {
   useEffect,
   useImperativeHandle,
 } from "react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import {
   Bold,
   Code,
@@ -27,7 +27,7 @@ import {
   Underline as UnderlineIcon,
   Undo,
 } from "lucide-react";
-import { Separator } from "./ui/separator";
+import { Separator } from "../ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -35,8 +35,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
-import { Input } from "./ui/input";
+} from "../ui/dialog";
+import { Input } from "../ui/input";
 
 const TipTapEditor = forwardRef(({ content, onChange, placeholder }, ref) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);

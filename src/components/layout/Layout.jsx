@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from './Sidebar';
-import MobileBottomNav from './MobileBottomNav';
-import { Button } from './ui/button';
+import Sidebar from '../Sidebar';
+import MobileBottomNav from '../MobileBottomNav';
+import { Button } from '../ui/button';
 import { Menu } from 'lucide-react';
 
 export default function Layout({ children }) {

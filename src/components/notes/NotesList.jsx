@@ -1,8 +1,8 @@
 import React from 'react'
-import { Skeleton } from './ui/skeleton'
+import { Skeleton } from '../ui/skeleton'
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
-import { Badge } from './ui/badge';
+import { Badge } from '../ui/badge';
 import { Clock, FileText, Lock } from 'lucide-react';
 
 export default function NotesList({ notes, selectedNoteId, onNoteSelect, loading }) {

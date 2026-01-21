@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import { useQuery } from "convex/react";
-import { Archive, Search, Sparkles } from "lucide-react";
+import { Tag, ArrowLeft, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import NotesList from "./NotesList";
-import NotePreview from "./NotePreview";
-import { api } from "../../convex/_generated/api";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import NotesList from "../notes/NotesList";
+import NotePreview from "../notes/NotePreview";
+import { api } from "../../../convex/_generated/api"
 
-export default function ArchiveView() {
+export default function TagsView() {
+  const { tag } = useParams();
   const navigate = useNavigate();
   const { user } = useUser();
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,7 +20,9 @@ export default function ArchiveView() {
 
   const notes = useQuery(
     api.notes.getNotes,
-    user ? { userId: user.id, isArchived: true } : "skip",
+    user && tag
+      ? { userId: user.id, isArchived: false, tagFilter: tag }
+      : "skip",
   );
 
   const filteredNotes = notes?.filter((note) => {
@@ -25,8 +30,7 @@ export default function ArchiveView() {
     const searchLower = searchTerm.toLowerCase();
     return (
       note.title.toLowerCase().includes(searchLower) ||
-      note.content.toLowerCase().includes(searchLower) ||
-      note.tags.some((tag) => tag.toLowerCase().includes(searchLower))
+      note.content.toLowerCase().includes(searchLower)
     );
   });
 
@@ -60,23 +64,41 @@ export default function ArchiveView() {
       <div className="w-full md:w-80 flex flex-col border-r border-slate-200 bg-white/50 backdrop-blur-sm">
         <div className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-lg">
           <div className="flex items-center gap-3 mb-4">
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="hover:bg-slate-100"
+              >
+                <ArrowLeft className="size-4" />
+              </Button>
+            )}
             <div
-              className="size-8 rounded-xl flex items-center justify-center shadow-lg"
+              className="size-10 rounded-xl flex items-center justify-center shadow-lg"
               style={{
                 background: "var(--gradient-primary)",
                 boxShadow: "0 10px 25px -5px var(--shadow-primary)",
               }}
             >
-              <Archive className="size-5 text-white" />
+              <Tag className="size-5 text-white" />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-              Archived
+            <h1 className="text-xl font-bold text-slate-900 line-clamp-1">
+              Tag:{" "}
+              <Badge
+                className="text-white"
+                style={{
+                  background: "var(--gradient-primary)",
+                }}
+              >
+                {tag}
+              </Badge>
             </h1>
           </div>
 
           <div className="relative group">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400 transition-colors duration-200"
+            <Search 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 size-4 text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200" 
               style={{
                 color: document.querySelector(":focus-within")
                   ? "var(--color-primary)"
@@ -84,10 +106,10 @@ export default function ArchiveView() {
               }}
             />
             <Input
-              placeholder="Search archived notes..."
+              placeholder={`Search in ${tag}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-slate-300 rounded-lg transition-all duration-200"
+              className="pl-10 border-slate-300 rounded-lg"
               style={{
                 "--tw-ring-color": "var(--color-primary-200)",
               }}
@@ -99,6 +121,17 @@ export default function ArchiveView() {
               }}
             />
           </div>
+
+          {filteredNotes && (
+            <p className="text-sm text-slate-600 mt-2 flex items-center gap-1.5">
+              <span
+                className="size-1.5 rounded-full"
+                style={{ backgroundColor: "var(--color-primary)" }}
+              ></span>
+              {filteredNotes.length}{" "}
+              {filteredNotes.length === 1 ? "note" : "notes"}
+            </p>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto bg-gradient-to-b from-white/50 to-slate-50/50">
@@ -126,23 +159,22 @@ export default function ArchiveView() {
                     <div
                       className="absolute inset-0 rounded-full blur-xl opacity-30 animate-pulse"
                       style={{
-                        background: "var(--gradient-primary)",
+                        background:
+                          "linear-gradient(to right, #9333ea, #ec4899)",
                       }}
                     ></div>
-                    <Archive className="relative size-16 text-slate-300" />
+                    <Tag className="relative size-16 text-slate-300" />
                   </div>
                   <p className="text-xl font-semibold text-slate-700 mb-2">
-                    No archived notes
+                    No notes with "{tag}"
                   </p>
                   <p className="text-sm text-slate-500">
-                    Archived notes will appear here
+                    Create a note with this tag to see it here
                   </p>
                 </div>
               ) : (
                 <div className="text-center">
-                  <p className="text-slate-600">
-                    Select an archived note to view it
-                  </p>
+                  <p className="text-slate-600">Select a note to view it</p>
                 </div>
               )}
             </div>

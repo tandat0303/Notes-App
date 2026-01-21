@@ -1,10 +1,10 @@
 import { useUser } from "@clerk/clerk-react";
-import { api } from "../../convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 import { Archive, ArrowLeft, Trash2, Save, Sparkles, MoreVertical, Lock, Unlock, Share } from "lucide-react";
 import {
   Dialog,
@@ -14,21 +14,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
+} from "../ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+} from "../ui/dropdown-menu";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import TipTapEditor from "./TipTapEditor";
-import { LockNoteDialog } from "./LockNoteDialog";
+import { LockNoteDialog } from "../dialogs/LockNoteDialog";
 import { LockedNotePreview } from "./LockedNotePreview";
-import ShareDialog from "./ShareDialog";
-import { Switch } from "./ui/switch";
+import ShareDialog from "../dialogs/ShareDialog";
+import { Switch } from "../ui/switch";
+import NoteAnalytics from "./NoteAnalytics";
 
 export default function NoteEditor() {
   const { noteId } = useParams();
@@ -605,7 +606,9 @@ export default function NoteEditor() {
             <div className="flex justify-center">
               <div className="flex items-center gap-2 px-4 py-2">
                 <span className="text-sm font-medium text-slate-600">
-                  {isShared ? "Public" : "Private"}
+                  <b style={{ color: isShared ? "green" : "orange" }}>
+                    {isShared ? "Public" : "Private"}
+                  </b>
                 </span>
                 <Switch 
                   className="data-[state=checked]:bg-green-500 [&>span]:bg-white"
@@ -685,6 +688,12 @@ export default function NoteEditor() {
                 editable={!isLocked}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            {!isNewNote && currentNote?.isShared && (
+              <NoteAnalytics noteId={noteId} />
+            )}
           </div>
         </div>
       </div>

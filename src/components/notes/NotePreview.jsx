@@ -1,10 +1,10 @@
-import { api } from "../../convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 import { useMutation } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import { Archive, MoreVertical, Pencil, Share, Trash2, Lock, Unlock } from "lucide-react";
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "./ui/dropdown-menu";
+} from "../ui/dropdown-menu";
 import {
   Dialog,
   DialogClose,
@@ -22,12 +22,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./ui/dialog";
-import ShareDialog from "./ShareDialog";
-import { LockNoteDialog } from "./LockNoteDialog";
+} from "../ui/dialog";
+import ShareDialog from "../dialogs/ShareDialog";
+import { LockNoteDialog } from "../dialogs/LockNoteDialog";
 import { LockedNotePreview } from "./LockedNotePreview";
-import { Switch } from "./ui/switch";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { Switch } from "../ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 export default function NotePreview({ note, onEdit }) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
@@ -41,10 +41,13 @@ export default function NotePreview({ note, onEdit }) {
   const deleteNote = useMutation(api.notes.deleteNote);
   const setNoteLock = useMutation(api.notes.setNoteLock);
   const unlockNote = useMutation(api.notes.unlockNote);
+  const toggleShare = useMutation(api.notes.toggleShareNote);
 
   const isLocked = note.isLocked || false;
 
-  const toggleShare = useMutation(api.notes.toggleShareNote);
+  useEffect(() => {
+    setIsShared(note.isShared || false);
+  }, [note.isShared, note._id]);
 
   const formatDate = (timestamp) => {
     try {
@@ -119,6 +122,26 @@ export default function NotePreview({ note, onEdit }) {
     onEdit();
   };
 
+  const handleToggleShare = async () => {
+    if (isLocked) {
+      toast.error("Cannot change sharing settings for a locked note. Unlock it first.");
+      return;
+    }
+
+    const newShareState = !isShared;
+    setIsShared(newShareState);
+    
+    try {
+      await toggleShare({ id: note._id });
+      toast.success(newShareState ? "Note is now public" : "Note is now private");
+    } catch (error) {
+      // Revert on error
+      setIsShared(!newShareState);
+      toast.error("Failed to update share settings");
+      console.error("Failed to toggle share:", error);
+    }
+  };
+
   // Show locked state
   if (isLocked) {
     return (
@@ -180,19 +203,14 @@ export default function NotePreview({ note, onEdit }) {
           </div>
 
           <div className="flex items-center gap-2 ml-4">
-            {note.isShared ? "Public" : "Private"}
+            <b style={{ color: isShared ? "green" : "orange" }}>
+              {isShared ? "Public" : "Private"}
+            </b>
             <Switch 
-              className= "data-[state=checked]:bg-green-500 [&>span]:bg-white"
+              className="data-[state=checked]:bg-green-500 [&>span]:bg-white"
               checked={isShared}
-              onCheckedChange={async () => {
-                setIsShared(prev => !prev);
-                try {
-                  await toggleShare({ id: note._id });
-                } catch {
-                  setIsShared(prev => !prev);
-                  toast.error("Failed to update share state");
-                }
-              }}
+              onCheckedChange={handleToggleShare}
+              disabled={isLocked}
             />
 
             <Button
@@ -212,7 +230,7 @@ export default function NotePreview({ note, onEdit }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={!note.isShared}
+                      disabled={!isShared}
                       onClick={handleShare}
                       className="gap-2 border-slate-300 text-slate-700 text-sm hover:bg-slate-50 rounded-lg transition-all duration-200"
                     >
@@ -220,7 +238,7 @@ export default function NotePreview({ note, onEdit }) {
                       Share
                     </Button>
                   </span>
-                {!note.isShared && <TooltipContent>Sharing will be enable when note is public</TooltipContent>}
+                {!isShared && <TooltipContent>Sharing will be enabled when note is public</TooltipContent>}
                 </TooltipTrigger>
               </Tooltip>
             </TooltipProvider>  

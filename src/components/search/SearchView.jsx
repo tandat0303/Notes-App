@@ -5,9 +5,9 @@ import { useQuery } from "convex/react";
 import { Search, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import NotesList from "./NotesList";
-import NotePreview from "./NotePreview";
-import { api } from "../../convex/_generated/api";
+import NotesList from "../notes/NotesList";
+import NotePreview from "../notes/NotePreview";
+import { api } from "../../../convex/_generated/api";
 
 export default function SearchView() {
   const navigate = useNavigate();

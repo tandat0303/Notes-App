@@ -7,11 +7,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 import { Lock, Unlock, Eye, EyeOff, Shield } from "lucide-react";
-import { Label } from "./ui/label";
+import { Label } from "../ui/label";
 
 export function LockNoteDialog({ open, onOpenChange, onConfirm, isLocking, noteName }) {
   const [password, setPassword] = useState("");

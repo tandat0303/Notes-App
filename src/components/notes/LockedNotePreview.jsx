@@ -1,6 +1,6 @@
 import React from "react";
 import { Lock, Shield, Unlock } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../ui/button";
 
 export function LockedNotePreview({ note, onUnlockClick }) {
   return (
