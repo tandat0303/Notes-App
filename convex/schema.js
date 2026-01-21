@@ -10,6 +10,7 @@ export default defineSchema({
     userId: v.string(),
     isLocked: v.optional(v.boolean()),
     passwordHash: v.optional(v.string()),
+    // passwordSalt: v.optional(v.string()),
     lockedAt: v.optional(v.number()),
     isShared: v.optional(v.boolean()),
     sharedAt: v.optional(v.number()),

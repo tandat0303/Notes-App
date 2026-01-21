@@ -1,15 +1,29 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 
-function hashPassword(password) {
-  // Simple hash - in production use proper crypto library
-  let hash = 0;
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+// Hash password using Web Crypto API
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Hash with salt (more secure)
+async function hashPasswordWithSalt(password, salt = null) {
+  if (!salt) {
+    const saltBuffer = crypto.getRandomValues(new Uint8Array(16));
+    salt = Array.from(saltBuffer).map(b => b.toString(16).padStart(2, '0')).join('');
   }
-  return hash.toString(36);
+  
+  const encoder = new TextEncoder();
+  const passwordData = encoder.encode(password + salt);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', passwordData);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  return { hash: hashHex, salt };
 }
 
 // Set lock on note
@@ -33,7 +47,7 @@ export const setNoteLock = mutation({
       throw new Error("Not authorized");
     }
 
-    const passwordHash = hashPassword(args.password);
+    const passwordHash = await hashPassword(args.password);
 
     await ctx.db.patch(args.id, {
       isLocked: true,
@@ -70,7 +84,7 @@ export const unlockNote = mutation({
       throw new Error("Note is not locked");
     }
 
-    const passwordHash = hashPassword(args.password);
+    const passwordHash = await hashPassword(args.password);
     
     if (passwordHash !== note.passwordHash) {
       throw new Error("Incorrect password");
@@ -110,9 +124,9 @@ export const unlockSharedNote = mutation({
       throw new Error("Note is not locked");
     }
 
-    const passwordHash = hashPassword(args.password);
+    const passwordData = await hashPassword(args.password);
     
-    if (passwordHash !== note.passwordHash) {
+    if (passwordData !== note.passwordHash) {
       throw new Error("Incorrect password");
     }
 
@@ -297,9 +311,28 @@ export const updateSharedNote = mutation({
     id: v.id("notes"),
   },
   handler: async (ctx, args) => {
-    return await ctx.db.patch(args.id, {
+    await ctx.db.patch(args.id, {
       sharedAt: Date.now(),
     });
+
+    const analytics = await ctx.db
+      .query("shareAnalytics")
+      .withIndex("by_note", (q) => q.eq("noteId", args.id))
+      .first();
+
+    if (!analytics) {
+      const note = await ctx.db.get(args.id);
+      if (note) {
+        await ctx.db.insert("shareAnalytics", {
+          noteId: args.id,
+          userId: note.userId,
+          viewCount: 0,
+          viewers: [],
+        });
+      }
+    }
+
+    return { success: true };
   },
 });
 
@@ -319,6 +352,25 @@ export const toggleArchiveNote = mutation({
 export const deleteNote = mutation({
   args: { id: v.id("notes") },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const note = await ctx.db.get(args.id);
+    if (note && note.userId !== identity.subject) {
+      throw new Error("Not authorized");
+    }
+
+    const analytics = await ctx.db
+      .query("shareAnalytics")
+      .withIndex("by_note", (q) => q.eq("noteId", args.id))
+      .first();
+
+    if (analytics) {
+      await ctx.db.delete(analytics._id);
+    }
+
     return await ctx.db.delete(args.id);
   },
 });
@@ -439,3 +491,177 @@ export const generateShareLink = mutation({
     };
   },
 });
+
+export const trackNoteView = mutation({
+  args: {
+    noteId: v.id("notes"),
+    userAgent: v.optional(v.string()),
+    referrer: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const note = await ctx.db.get(args.noteId);
+    
+    if (!note || !note.isShared || note.isArchived) {
+      throw new Error("Note not available");
+    }
+
+    // Tìm analytics record cho note này
+    const analytics = await ctx.db
+      .query("shareAnalytics")
+      .withIndex("by_note", (q) => q.eq("noteId", args.noteId))
+      .first();
+
+    const viewData = {
+      viewedAt: Date.now(),
+      userAgent: args.userAgent,
+      referrer: args.referrer,
+    };
+
+    if (analytics) {
+      const updatedViewers = [...(analytics.viewers || []), viewData];
+      
+      await ctx.db.patch(analytics._id, {
+        viewCount: analytics.viewCount + 1,
+        lastViewedAt: Date.now(),
+        viewers: updatedViewers,
+      });
+    } else {
+      await ctx.db.insert("shareAnalytics", {
+        noteId: args.noteId,
+        userId: note.userId,
+        viewCount: 1,
+        lastViewedAt: Date.now(),
+        viewers: [viewData],
+      });
+    }
+
+    return { success: true };
+  },
+});
+
+export const getNoteAnalytics = query({
+  args: {
+    noteId: v.id("notes"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const note = await ctx.db.get(args.noteId);
+    if (!note) {
+      throw new Error("Note not found");
+    }
+
+    // Verify ownership
+    if (note.userId !== identity.subject) {
+      throw new Error("Not authorized");
+    }
+
+    const analytics = await ctx.db
+      .query("shareAnalytics")
+      .withIndex("by_note", (q) => q.eq("noteId", args.noteId))
+      .first();
+
+    if (!analytics) {
+      return {
+        noteId: args.noteId,
+        viewCount: 0,
+        lastViewedAt: null,
+        viewers: [],
+      };
+    }
+
+    return {
+      noteId: analytics.noteId,
+      viewCount: analytics.viewCount,
+      lastViewedAt: analytics.lastViewedAt,
+      viewers: analytics.viewers || [],
+      uniqueReferrers: [...new Set((analytics.viewers || []).map(v => v.referrer).filter(Boolean))],
+      viewsByDay: groupViewsByDay(analytics.viewers || []),
+    };
+  },
+});
+
+export const getUserAnalyticsSummary = query({
+  args: {
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || identity.subject !== args.userId) {
+      throw new Error("Not authorized");
+    }
+
+    const allAnalytics = await ctx.db
+      .query("shareAnalytics")
+      .filter((q) => q.eq(q.field("userId"), args.userId))
+      .collect();
+
+    const totalViews = allAnalytics.reduce((sum, a) => sum + a.viewCount, 0);
+    const totalSharedNotes = allAnalytics.length;
+
+    const mostViewedNote = allAnalytics.reduce((max, a) => 
+      a.viewCount > (max?.viewCount || 0) ? a : max, 
+      null
+    );
+
+    return {
+      totalViews,
+      totalSharedNotes,
+      mostViewedNoteId: mostViewedNote?.noteId,
+      mostViewedCount: mostViewedNote?.viewCount || 0,
+      recentViews: allAnalytics
+        .filter(a => a.lastViewedAt)
+        .sort((a, b) => b.lastViewedAt - a.lastViewedAt)
+        .slice(0, 10),
+    };
+  },
+});
+
+export const deleteNoteAnalytics = mutation({
+  args: {
+    noteId: v.id("notes"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const note = await ctx.db.get(args.noteId);
+    if (note && note.userId !== identity.subject) {
+      throw new Error("Not authorized");
+    }
+
+    const analytics = await ctx.db
+      .query("shareAnalytics")
+      .withIndex("by_note", (q) => q.eq("noteId", args.noteId))
+      .first();
+
+    if (analytics) {
+      await ctx.db.delete(analytics._id);
+    }
+
+    return { success: true };
+  },
+});
+
+function groupViewsByDay(viewers) {
+  const grouped = {};
+  
+  viewers.forEach(viewer => {
+    const date = new Date(viewer.viewedAt);
+    const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    if (!grouped[dateKey]) {
+      grouped[dateKey] = 0;
+    }
+    grouped[dateKey]++;
+  });
+
+  return Object.entries(grouped)
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
